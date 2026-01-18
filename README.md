@@ -34,6 +34,12 @@ Out of scope for Step 1: PDF, preview, backend, AI, external services.
 - Docker-first workflow (Linux container), even on Windows host
 - CI/CD ready (GitHub Actions), deployable to Vercel
 
+## Filename Rules (Generation)
+
+- Filenames are built from sanitized field values
+- Row index suffix is always added to prevent ZIP duplicates
+- If all values are empty, use `document_###.docx`
+
 ## Documents
 
 - Requirements: `docs/REQUIREMENTS/FR_v0.1.0.md`, `docs/REQUIREMENTS/NFR_v0.1.0.md`
