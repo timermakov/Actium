@@ -7,8 +7,10 @@ export function buildFileName(values: string[], index: number): string {
     return `document_${String(index).padStart(3, '0')}.docx`
   }
 
-  const joined = cleanedValues.join('_').slice(0, 80)
-  return `${joined}.docx`
+  const suffix = `_${String(index).padStart(3, '0')}`
+  const maxBaseLength = Math.max(0, 80 - suffix.length)
+  const joined = cleanedValues.join('_').slice(0, maxBaseLength)
+  return `${joined}${suffix}.docx`
 }
 
 export function sanitizeFileName(value: string): string {

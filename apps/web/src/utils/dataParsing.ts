@@ -26,10 +26,11 @@ export function parseXlsx(buffer: ArrayBuffer): DataTable {
   const rows = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1 })
 
   const [headerRow, ...dataRows] = rows
-  const columns = (headerRow ?? []).map((value) => String(value ?? '').trim()).filter(Boolean)
+  const headerCells = (headerRow ?? []).map((value) => String(value ?? '').trim())
+  const columns = headerCells.filter(Boolean)
   const normalizedRows = dataRows
     .filter((row) => row.some((cell) => String(cell ?? '').trim()))
-    .map((row) => normalizeRow(fromRowArray(row, columns), columns))
+    .map((row) => normalizeRow(fromRowArray(row, headerCells), columns))
 
   return { columns, rows: normalizedRows }
 }
@@ -41,9 +42,12 @@ export function getPreviewRows(table: DataTable): DataTable {
   }
 }
 
-function fromRowArray(row: string[], columns: string[]): Record<string, string> {
+function fromRowArray(row: string[], headerCells: string[]): Record<string, string> {
   const record: Record<string, string> = {}
-  columns.forEach((column, index) => {
+  headerCells.forEach((column, index) => {
+    if (!column) {
+      return
+    }
     record[column] = String(row[index] ?? '')
   })
   return record

@@ -97,6 +97,7 @@ function App() {
     setDataPreview(null)
     setGenerationErrors([])
     setGenerationWarnings([])
+    setSelectedRow(0)
 
     const lowerName = file.name.toLowerCase()
     try {
@@ -139,6 +140,7 @@ function App() {
       setMappingError(t('mapping.notReady'))
       return
     }
+    setMappingError(null)
     const next: MappingState = {}
     templateFields.forEach((field) => {
       const column = imported[field.name]
@@ -146,7 +148,15 @@ function App() {
         next[field.name] = column
       }
     })
+    if (Object.keys(next).length === 0) {
+      setMappingError(t('mapping.importNoMatches'))
+      return
+    }
     setMapping(next)
+  }
+
+  const handleImportMappingError = (message: string) => {
+    setMappingError(message)
   }
 
   const handleExportMapping = () => {
@@ -283,6 +293,7 @@ function App() {
           error={mappingError}
           onMappingChange={handleMappingChange}
           onImportMapping={handleImportMapping}
+          onImportError={handleImportMappingError}
           onExportMapping={handleExportMapping}
         />
 

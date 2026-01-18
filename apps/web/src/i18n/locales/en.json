@@ -32,6 +32,8 @@
     },
     "mapping": {
         "notReady": "Upload a template and data file to map fields.",
+        "importFailed": "Failed to import the mapping file.",
+        "importNoMatches": "Imported mapping has no matching columns.",
         "templateField": "Template Field",
         "dataColumn": "Data Column",
         "select": "Select column"

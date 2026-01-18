@@ -26,6 +26,7 @@ type MappingCardProps = {
   error: string | null
   onMappingChange: (fieldName: string, column: string) => void
   onImportMapping: (mapping: MappingState) => void
+  onImportError: (message: string) => void
   onExportMapping: () => void
 }
 
@@ -36,6 +37,7 @@ export function MappingCard({
   error,
   onMappingChange,
   onImportMapping,
+  onImportError,
   onExportMapping,
 }: MappingCardProps) {
   const { t } = useTranslation()
@@ -64,9 +66,20 @@ export function MappingCard({
                 }
                 file
                   .text()
-                  .then((text) => JSON.parse(text) as MappingState)
-                  .then((value) => onImportMapping(value))
-                  .catch(() => onImportMapping({}))
+                  .then((text) => {
+                    try {
+                      return JSON.parse(text)
+                    } catch {
+                      throw new Error('invalid-json')
+                    }
+                  })
+                  .then((value) => {
+                    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+                      throw new Error('invalid-mapping')
+                    }
+                    onImportMapping(value as MappingState)
+                  })
+                  .catch(() => onImportError(t('mapping.importFailed')))
                   .finally(() => {
                     if (inputRef.current) {
                       inputRef.current.value = ''
