@@ -69,3 +69,6 @@ This project uses AI agents to accelerate delivery. Follow these rules strictly.
 
 Append this file with important information you studied from errors or solutions found regularly.
 
+## Learnings
+
+- `vercel.json` schema rejects `rootDirectory`; use `installCommand`/`buildCommand` with `cd` and set `outputDirectory` to monorepo app output.
