@@ -7,19 +7,19 @@ Step 1 (v0.1.0) delivers a minimal but working DOCX workflow: upload template, u
 
 - Accept a DOCX template with `{{field_name}}` placeholders
 - Accept CSV/XLSX data with headers
-- Provide a 2-column mapping UI
+- Provide a 2-column mapping UI (template placeholders - data from table)
 - Generate filled DOCX (single) or ZIP of DOCX (batch)
 
 Out of scope for Step 1: PDF, preview, backend, AI, external services.
 
-## Product Context (RU)
+## Product Context
 
-**Problem:** Массовое заполнение юридически значимых документов выполняется вручную, медленно, с ошибками, в условиях жёсткого регулирования и ограниченных ресурсов.  
-**Solution:** Генерация по шаблону: вся логика строится вокруг подстановки полей в шаблон от юристов.
+**Problem:** Mass filling of legally significant documents is performed manually, slowly, with errors, in conditions of strict regulation and limited resources.  
+**Solution:** Template generation: all logic is built around substituting fields into a template from lawyers.
 
 ## Tech Stack (Step 1)
 
-- React 18 + TypeScript + Vite
+- React (latest stable) + TypeScript + Vite
 - `docxtemplater`, `pizzip` — DOCX parsing/generation
 - `xlsx` (SheetJS) — XLSX parsing
 - `papaparse` — CSV parsing
@@ -37,7 +37,7 @@ Out of scope for Step 1: PDF, preview, backend, AI, external services.
 ## Documents
 
 - Requirements: `docs/REQUIREMENTS/FR_v0.1.0.md`, `docs/REQUIREMENTS/NFR_v0.1.0.md`
-- MVP plan: `docs/PLAN/MVP_STEP1_v0.1.0.md`
+- MVP plan: `docs/VERSION_PLANS/PLAN_v0.1.0.md`
 - Roadmap: `docs/ROADMAP.md`
 
 ## Quick MVP Plan (Summary)
@@ -55,3 +55,27 @@ Out of scope for Step 1: PDF, preview, backend, AI, external services.
 
 - Target environment: Windows (PowerShell), but build/run inside Linux containers.
 - Install latest Node.js and package manager on host only if needed for editor tooling.
+
+## Build and Run
+
+From repository root:
+
+```
+cd apps/web
+npm install
+npm run dev
+```
+
+Docker (Linux container, recommended on Windows):
+
+```
+docker compose up --build
+```
+
+Production build:
+
+```
+cd apps/web
+npm run build
+npm run preview
+```
