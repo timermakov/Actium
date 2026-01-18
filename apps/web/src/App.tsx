@@ -86,7 +86,7 @@ function App() {
       if (placeholders.length === 0) {
         setTemplateError(t('errors.noPlaceholders'))
       }
-    } catch (error) {
+    } catch {
       setTemplateError(t('errors.templateParseFailed'))
     }
   }
@@ -121,7 +121,7 @@ function App() {
         return
       }
       setDataError(t('errors.invalidDataFile'))
-    } catch (error) {
+    } catch {
       setDataError(t('errors.dataParseFailed'))
     }
   }
@@ -200,7 +200,7 @@ function App() {
       const blob = generateDocxBlob(templateBuffer, data)
       const fileName = buildFileName(Object.values(data), selectedRow + 1)
       saveAs(blob, fileName)
-    } catch (error) {
+    } catch {
       setGenerationErrors([t('generation.errors.singleFailed')])
     } finally {
       setIsGenerating(false)
@@ -228,7 +228,7 @@ function App() {
         const blob = generateDocxBlob(templateBuffer, data)
         const fileName = buildFileName(Object.values(data), index + 1)
         zip.file(fileName, blob)
-      } catch (error) {
+      } catch {
         failedRows.push(index + 1)
       }
     }

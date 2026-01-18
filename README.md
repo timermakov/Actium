@@ -66,6 +66,13 @@ npm install
 npm run dev
 ```
 
+Lint:
+
+```
+cd apps/web
+npm run lint
+```
+
 Docker (Linux container, recommended on Windows):
 
 ```
