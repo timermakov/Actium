@@ -5,6 +5,7 @@ type SectionCardProps = {
   title: string
   description: string
   actions?: ReactNode
+  children?: ReactNode
   showDivider?: boolean
 }
 
@@ -12,6 +13,7 @@ export function SectionCard({
   title,
   description,
   actions,
+  children,
   showDivider = false,
 }: SectionCardProps) {
   return (
@@ -21,6 +23,7 @@ export function SectionCard({
         <Typography variant="body2" color="text.secondary">
           {description}
         </Typography>
+        {children}
         {showDivider ? <Divider /> : null}
         {actions}
       </Stack>

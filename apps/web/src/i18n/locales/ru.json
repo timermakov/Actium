@@ -1,29 +1,67 @@
 {
-  "appTitle": "Actium",
-  "appSubtitle": "Платформа генерации юридических документов",
-  "mvpStep": "MVP шаг 1 (v0.1.0)",
-  "sections": {
-    "template": "Загрузка шаблона",
-    "data": "Загрузка данных",
-    "mapping": "Сопоставление полей",
-    "generation": "Генерация документов"
-  },
-  "actions": {
-    "uploadDocx": "Загрузить DOCX",
-    "uploadData": "Загрузить CSV/XLSX",
-    "importMapping": "Импорт маппинга",
-    "exportMapping": "Экспорт маппинга",
-    "generateSingle": "Сгенерировать один",
-    "generateBatch": "Сгенерировать ZIP"
-  },
-  "notes": {
-    "templateHint": "Плейсхолдеры должны быть в формате {{field_name}}.",
-    "dataHint": "Первая строка должна содержать заголовки.",
-    "mappingHint": "Свяжите каждое поле шаблона с колонкой данных.",
-    "generationHint": "Выберите строку для одной генерации или обработайте все строки."
-  },
-  "language": "Язык",
-  "status": {
-    "notReady": "Пока не подключено. Только каркас UI."
-  }
+    "appTitle": "Actium",
+    "appSubtitle": "Платформа генерации юридических документов",
+    "mvpStep": "MVP шаг 1 (v0.1.0)",
+    "sections": {
+        "template": "Загрузка шаблона",
+        "data": "Загрузка данных",
+        "mapping": "Сопоставление полей",
+        "generation": "Генерация документов"
+    },
+    "actions": {
+        "uploadDocx": "Загрузить DOCX",
+        "uploadData": "Загрузить CSV/XLSX",
+        "importMapping": "Импорт маппинга",
+        "exportMapping": "Экспорт маппинга",
+        "generateSingle": "Сгенерировать один",
+        "generateBatch": "Сгенерировать ZIP"
+    },
+    "notes": {
+        "templateHint": "Плейсхолдеры должны быть в формате {{field_name}}.",
+        "dataHint": "Первая строка должна содержать заголовки.",
+        "mappingHint": "Свяжите каждое поле шаблона с колонкой данных.",
+        "generationHint": "Выберите строку для одной генерации или обработайте все строки."
+    },
+    "template": {
+        "fieldsDetected": "Найдено полей: {{count}}"
+    },
+    "data": {
+        "summary": "Строк: {{rows}}, Колонок: {{columns}}",
+    "noPreview": "Нет строк для предпросмотра.",
+    "previewNote": "Предпросмотр показывает первые 10 строк."
+    },
+    "mapping": {
+        "notReady": "Загрузите шаблон и данные для маппинга.",
+        "templateField": "Поле шаблона",
+        "dataColumn": "Колонка данных",
+        "select": "Выберите колонку"
+    },
+    "generation": {
+        "rowSelect": "Строка для одной генерации",
+        "noRows": "Нет строк",
+        "rowLabel": "Строка {{index}}",
+        "errors": {
+            "missingTemplate": "Загрузите шаблон перед генерацией.",
+            "missingData": "Загрузите данные перед генерацией.",
+            "incompleteMapping": "Заполните маппинг перед генерацией.",
+            "singleFailed": "Не удалось сгенерировать документ.",
+            "batchFailed": "Пакет создан с ошибками в строках: {{rows}}"
+        },
+        "warnings": {
+            "emptyFields": "Пустые значения для полей: {{fields}}",
+            "emptyRows": "Строки с пустыми значениями: {{rows}}"
+        }
+    },
+    "errors": {
+        "invalidDocx": "Допустимы только шаблоны .docx.",
+        "noPlaceholders": "В шаблоне не найдены плейсхолдеры.",
+        "templateParseFailed": "Не удалось прочитать шаблон.",
+        "invalidDataFile": "Допустимы только файлы .csv или .xlsx.",
+        "dataParseFailed": "Не удалось прочитать файл данных.",
+        "noColumns": "В файле данных не найдены колонки."
+    },
+    "language": "Язык",
+    "status": {
+    "intro": "Загрузите шаблон и данные, чтобы начать работу."
+    }
 }

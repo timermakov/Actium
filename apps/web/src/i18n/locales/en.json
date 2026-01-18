@@ -1,29 +1,67 @@
 {
-  "appTitle": "Actium",
-  "appSubtitle": "Debt & Legal Document Generation Platform",
-  "mvpStep": "MVP Step 1 (v0.1.0)",
-  "sections": {
-    "template": "Template Upload",
-    "data": "Data Upload",
-    "mapping": "Field Mapping",
-    "generation": "Document Generation"
-  },
-  "actions": {
-    "uploadDocx": "Upload DOCX",
-    "uploadData": "Upload CSV/XLSX",
-    "importMapping": "Import Mapping",
-    "exportMapping": "Export Mapping",
-    "generateSingle": "Generate Single",
-    "generateBatch": "Generate Batch ZIP"
-  },
-  "notes": {
-    "templateHint": "Placeholders must follow {{field_name}} format.",
-    "dataHint": "First row must contain headers.",
-    "mappingHint": "Map each template field to a data column.",
-    "generationHint": "Select a row for single generation or process all rows."
-  },
-  "language": "Language",
-  "status": {
-    "notReady": "Not connected yet. UI skeleton only."
-  }
+    "appTitle": "Actium",
+    "appSubtitle": "Debt & Legal Document Generation Platform",
+    "mvpStep": "MVP Step 1 (v0.1.0)",
+    "sections": {
+        "template": "Template Upload",
+        "data": "Data Upload",
+        "mapping": "Field Mapping",
+        "generation": "Document Generation"
+    },
+    "actions": {
+        "uploadDocx": "Upload DOCX",
+        "uploadData": "Upload CSV/XLSX",
+        "importMapping": "Import Mapping",
+        "exportMapping": "Export Mapping",
+        "generateSingle": "Generate Single",
+        "generateBatch": "Generate Batch ZIP"
+    },
+    "notes": {
+        "templateHint": "Placeholders must follow {{field_name}} format.",
+        "dataHint": "First row must contain headers.",
+        "mappingHint": "Map each template field to a data column.",
+        "generationHint": "Select a row for single generation or process all rows."
+    },
+    "template": {
+        "fieldsDetected": "Detected fields: {{count}}"
+    },
+    "data": {
+        "summary": "Rows: {{rows}}, Columns: {{columns}}",
+    "noPreview": "No rows to preview.",
+    "previewNote": "Preview shows the first 10 rows."
+    },
+    "mapping": {
+        "notReady": "Upload a template and data file to map fields.",
+        "templateField": "Template Field",
+        "dataColumn": "Data Column",
+        "select": "Select column"
+    },
+    "generation": {
+        "rowSelect": "Row for single generation",
+        "noRows": "No rows",
+        "rowLabel": "Row {{index}}",
+        "errors": {
+            "missingTemplate": "Upload a template before generation.",
+            "missingData": "Upload data before generation.",
+            "incompleteMapping": "Complete the field mapping before generation.",
+            "singleFailed": "Failed to generate document.",
+            "batchFailed": "Batch completed with errors in rows: {{rows}}"
+        },
+        "warnings": {
+            "emptyFields": "Empty values for fields: {{fields}}",
+            "emptyRows": "Rows with empty values: {{rows}}"
+        }
+    },
+    "errors": {
+        "invalidDocx": "Only .docx templates are allowed.",
+        "noPlaceholders": "No placeholders were detected in the template.",
+        "templateParseFailed": "Failed to read the template.",
+        "invalidDataFile": "Only .csv or .xlsx files are allowed.",
+        "dataParseFailed": "Failed to read the data file.",
+        "noColumns": "No columns were detected in the data file."
+    },
+    "language": "Language",
+    "status": {
+    "intro": "Upload a template and data file to start the workflow."
+    }
 }
