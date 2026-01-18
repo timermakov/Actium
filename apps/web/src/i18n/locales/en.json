@@ -27,8 +27,8 @@
     },
     "data": {
         "summary": "Rows: {{rows}}, Columns: {{columns}}",
-    "noPreview": "No rows to preview.",
-    "previewNote": "Preview shows the first 10 rows."
+        "noPreview": "No rows to preview.",
+        "previewNote": "Preview shows the first 10 rows."
     },
     "mapping": {
         "notReady": "Upload a template and data file to map fields.",
@@ -62,6 +62,6 @@
     },
     "language": "Language",
     "status": {
-    "intro": "Upload a template and data file to start the workflow."
+        "intro": "Upload a template and data file to start the workflow."
     }
 }
