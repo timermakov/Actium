@@ -1,0 +1,29 @@
+{
+  "appTitle": "Actium",
+  "appSubtitle": "Debt & Legal Document Generation Platform",
+  "mvpStep": "MVP Step 1 (v0.1.0)",
+  "sections": {
+    "template": "Template Upload",
+    "data": "Data Upload",
+    "mapping": "Field Mapping",
+    "generation": "Document Generation"
+  },
+  "actions": {
+    "uploadDocx": "Upload DOCX",
+    "uploadData": "Upload CSV/XLSX",
+    "importMapping": "Import Mapping",
+    "exportMapping": "Export Mapping",
+    "generateSingle": "Generate Single",
+    "generateBatch": "Generate Batch ZIP"
+  },
+  "notes": {
+    "templateHint": "Placeholders must follow {{field_name}} format.",
+    "dataHint": "First row must contain headers.",
+    "mappingHint": "Map each template field to a data column.",
+    "generationHint": "Select a row for single generation or process all rows."
+  },
+  "language": "Language",
+  "status": {
+    "notReady": "Not connected yet. UI skeleton only."
+  }
+}

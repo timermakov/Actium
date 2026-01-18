@@ -1,0 +1,29 @@
+{
+  "appTitle": "Actium",
+  "appSubtitle": "Платформа генерации юридических документов",
+  "mvpStep": "MVP шаг 1 (v0.1.0)",
+  "sections": {
+    "template": "Загрузка шаблона",
+    "data": "Загрузка данных",
+    "mapping": "Сопоставление полей",
+    "generation": "Генерация документов"
+  },
+  "actions": {
+    "uploadDocx": "Загрузить DOCX",
+    "uploadData": "Загрузить CSV/XLSX",
+    "importMapping": "Импорт маппинга",
+    "exportMapping": "Экспорт маппинга",
+    "generateSingle": "Сгенерировать один",
+    "generateBatch": "Сгенерировать ZIP"
+  },
+  "notes": {
+    "templateHint": "Плейсхолдеры должны быть в формате {{field_name}}.",
+    "dataHint": "Первая строка должна содержать заголовки.",
+    "mappingHint": "Свяжите каждое поле шаблона с колонкой данных.",
+    "generationHint": "Выберите строку для одной генерации или обработайте все строки."
+  },
+  "language": "Язык",
+  "status": {
+    "notReady": "Пока не подключено. Только каркас UI."
+  }
+}
