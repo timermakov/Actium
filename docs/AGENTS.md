@@ -72,3 +72,4 @@ Append this file with important information you studied from errors or solutions
 ## Learnings
 
 - `vercel.json` schema rejects `rootDirectory`; use `installCommand`/`buildCommand` with `cd` and set `outputDirectory` to monorepo app output.
+- For mixed Vercel project roots, use conditional commands and normalize output to `dist` at the project root.
