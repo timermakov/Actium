@@ -1,12 +1,41 @@
 {
     "appTitle": "Actium",
     "appSubtitle": "Платформа генерации юридических документов",
-    "mvpStep": "MVP шаг 1 (v0.1.0)",
+    "mvpStep": "MVP шаг 1 (v0.1.1)",
     "sections": {
         "template": "Загрузка шаблона",
         "data": "Загрузка данных",
         "mapping": "Сопоставление полей",
-        "generation": "Генерация документов"
+        "generation": "Генерация документов",
+        "dataQuality": "Качество данных",
+        "mappingHealth": "Статус маппинга",
+        "ai": "AI помощник"
+    },
+    "dataQuality": {
+        "rows": "Строк: {{count}}",
+        "columns": "Колонок: {{count}}",
+        "emptyCells": "Пустых ячеек: {{count}}",
+        "emptyRows": "Пустых строк: {{count}}",
+        "duplicates": "Дубликатов строк: {{count}}",
+        "noData": "Загрузите данные, чтобы увидеть метрики качества."
+    },
+    "mappingHealth": {
+        "mappedPercent": "Сопоставлено: {{value}}%",
+        "unmapped": "Несопоставленные поля",
+        "allMapped": "Все поля сопоставлены."
+    },
+    "ai": {
+        "noResult": "Запустите AI, чтобы увидеть ответ.",
+        "loading": "Генерируем ответ...",
+        "language": {
+            "ru": "Язык AI: RU",
+            "en": "Язык AI: EN"
+        },
+        "errors": {
+            "missingData": "Загрузите данные перед запросом сводки.",
+            "missingTemplate": "Загрузите шаблон перед запросом советов.",
+            "requestFailed": "Ошибка AI запроса."
+        }
     },
     "actions": {
         "uploadDocx": "Загрузить DOCX",
@@ -14,13 +43,18 @@
         "importMapping": "Импорт маппинга",
         "exportMapping": "Экспорт маппинга",
         "generateSingle": "Сгенерировать один",
-        "generateBatch": "Сгенерировать ZIP"
+        "generateBatch": "Сгенерировать ZIP",
+        "aiSummary": "Сводка по данным",
+        "aiAdvice": "Советы по маппингу"
     },
     "notes": {
         "templateHint": "Плейсхолдеры должны быть в формате {{field_name}}.",
         "dataHint": "Первая строка должна содержать заголовки.",
         "mappingHint": "Свяжите каждое поле шаблона с колонкой данных.",
-        "generationHint": "Выберите строку для одной генерации или обработайте все строки."
+        "generationHint": "Выберите строку для одной генерации или обработайте все строки.",
+        "dataQualityHint": "Быстрая проверка полноты и дублей.",
+        "mappingHealthHint": "Отслеживайте, сколько полей уже сопоставлено.",
+        "aiHint": "Получите краткие выводы и советы от AI."
     },
     "template": {
         "fieldsDetected": "Найдено полей: {{count}}"

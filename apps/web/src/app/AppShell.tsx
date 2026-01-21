@@ -12,8 +12,13 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <Box sx={{ minHeight: '100vh', pb: 6 }}>
-      <AppBar position="static" color="transparent" elevation={0}>
-        <Toolbar sx={{ gap: 2 }}>
+      <AppBar
+        position="static"
+        color="transparent"
+        elevation={0}
+        sx={{ borderBottom: '1px solid', borderColor: 'divider' }}
+      >
+        <Toolbar sx={{ gap: 2, minHeight: 72 }}>
           <Box>
             <Typography variant="h6">{t('appTitle')}</Typography>
             <Typography variant="body2" color="text.secondary">
@@ -24,8 +29,9 @@ export function AppShell({ children }: AppShellProps) {
           <LanguageSwitch />
         </Toolbar>
       </AppBar>
-
-      <Container sx={{ mt: 4 }}>{children}</Container>
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
+        {children}
+      </Container>
     </Box>
   )
 }

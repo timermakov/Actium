@@ -1,12 +1,41 @@
 {
     "appTitle": "Actium",
     "appSubtitle": "Debt & Legal Document Generation Platform",
-    "mvpStep": "MVP Step 1 (v0.1.0)",
+    "mvpStep": "MVP Step 1 (v0.1.1)",
     "sections": {
         "template": "Template Upload",
         "data": "Data Upload",
         "mapping": "Field Mapping",
-        "generation": "Document Generation"
+        "generation": "Document Generation",
+        "dataQuality": "Data Quality",
+        "mappingHealth": "Mapping Health",
+        "ai": "AI Assistant"
+    },
+    "dataQuality": {
+        "rows": "Rows: {{count}}",
+        "columns": "Columns: {{count}}",
+        "emptyCells": "Empty cells: {{count}}",
+        "emptyRows": "Empty rows: {{count}}",
+        "duplicates": "Duplicate rows: {{count}}",
+        "noData": "Upload data to see quality metrics."
+    },
+    "mappingHealth": {
+        "mappedPercent": "Mapped: {{value}}%",
+        "unmapped": "Unmapped fields",
+        "allMapped": "All fields are mapped."
+    },
+    "ai": {
+        "noResult": "Run AI to see the response here.",
+        "loading": "Generating response...",
+        "language": {
+            "ru": "AI language: RU",
+            "en": "AI language: EN"
+        },
+        "errors": {
+            "missingData": "Upload data before requesting a summary.",
+            "missingTemplate": "Upload a template before requesting advice.",
+            "requestFailed": "AI request failed."
+        }
     },
     "actions": {
         "uploadDocx": "Upload DOCX",
@@ -14,13 +43,18 @@
         "importMapping": "Import Mapping",
         "exportMapping": "Export Mapping",
         "generateSingle": "Generate Single",
-        "generateBatch": "Generate Batch ZIP"
+        "generateBatch": "Generate Batch ZIP",
+        "aiSummary": "Summarize data",
+        "aiAdvice": "Get mapping advice"
     },
     "notes": {
         "templateHint": "Placeholders must follow {{field_name}} format.",
         "dataHint": "First row must contain headers.",
         "mappingHint": "Map each template field to a data column.",
-        "generationHint": "Select a row for single generation or process all rows."
+        "generationHint": "Select a row for single generation or process all rows.",
+        "dataQualityHint": "Quick checks for completeness and duplicates.",
+        "mappingHealthHint": "Track how many template fields are mapped.",
+        "aiHint": "Get quick insights and mapping advice from AI."
     },
     "template": {
         "fieldsDetected": "Detected fields: {{count}}"
