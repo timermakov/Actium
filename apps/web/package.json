@@ -7,6 +7,10 @@
         "dev": "vite",
         "build": "tsc -b && vite build",
         "lint": "eslint .",
+        "test": "vitest",
+        "test:unit": "vitest run tests/unit",
+        "test:integration": "vitest run tests/integration",
+        "test:ci": "npm run test:unit && npm run test:integration",
         "preview": "vite preview",
         "format": "prettier ."
     },
