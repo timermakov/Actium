@@ -440,10 +440,10 @@ function App() {
           onExportMapping={handleExportMapping}
         />
         <Grid container spacing={2}>
-          <Grid item xs={12} md={5}>
+          <Grid size={{ xs: 12, md: 5 }}>
             <MappingHealthCard mappedPercent={mappedPercent} unmappedFields={unmappedFields} />
           </Grid>
-          <Grid item xs={12} md={7}>
+          <Grid size={{ xs: 12, md: 7 }}>
             <AIAssistantCard
               canSummarize={(dataTable?.rows.length ?? 0) > 0}
               canAdvise={templateFields.length > 0}
