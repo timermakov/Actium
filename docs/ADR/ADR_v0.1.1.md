@@ -13,5 +13,5 @@ This document captures key architectural decisions for the v0.1.1 iteration.
 
 - **Status:** Accepted
 - **Context:** Need a stable client for GigaChat with model selection and scope control.
-- **Decision:** Use `langchain-gigachat` with model set to `gigachat-2` and scope `GIGACHAT_API_CORP`.
+- **Decision:** Use `langchain-gigachat` with model set to `gigachat-2` and scope `GIGACHAT_API_PERS`.
 - **Consequences:** Adds a lightweight Python dependency and requires env configuration for credentials.

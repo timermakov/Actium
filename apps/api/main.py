@@ -56,7 +56,7 @@ def get_client() -> GigaChat:
     if not credentials:
         raise HTTPException(status_code=500, detail="GIGACHAT_CREDENTIALS is missing.")
     model = os.getenv("GIGACHAT_MODEL", "gigachat-2")
-    scope = os.getenv("GIGACHAT_SCOPE", "GIGACHAT_API_CORP")
+    scope = os.getenv("GIGACHAT_SCOPE", "GIGACHAT_API_PERS")
     verify_ssl = os.getenv("GIGACHAT_VERIFY_SSL", "false").lower() in {"1", "true", "yes"}
     return GigaChat(
         credentials=credentials,
