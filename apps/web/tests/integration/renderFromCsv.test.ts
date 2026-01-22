@@ -3,7 +3,7 @@ import { readFile } from 'fs/promises'
 import path from 'path'
 import Docxtemplater from 'docxtemplater'
 import PizZip from 'pizzip'
-import { extractPlaceholdersFromDocx, generateDocxBlob } from '../../src/utils/docx'
+import { extractPlaceholdersFromDocx } from '../../src/utils/docx'
 import { parseCsv } from '../../src/utils/dataParsing'
 
 function bufferToArrayBuffer(buf: Buffer): ArrayBuffer {
