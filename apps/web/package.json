@@ -7,6 +7,10 @@
         "dev": "vite",
         "build": "tsc -b && vite build",
         "lint": "eslint .",
+        "test": "vitest",
+        "test:unit": "vitest run tests/unit",
+        "test:integration": "vitest run tests/integration",
+        "test:ci": "npm run test:unit && npm run test:integration",
         "preview": "vite preview",
         "format": "prettier ."
     },
@@ -41,6 +45,7 @@
         "prettier": "^3.8.0",
         "typescript": "~5.9.3",
         "typescript-eslint": "^8.46.4",
-        "vite": "^7.2.4"
+        "vite": "^7.2.4",
+        "vitest": "^4.0.5"
     }
 }
