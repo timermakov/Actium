@@ -1,4 +1,4 @@
-# Tech Stack — v0.1.0
+# Tech Stack — v0.1.1
 
 This document defines the minimal, stable stack for Step 1 MVP.
 
@@ -13,6 +13,12 @@ This document defines the minimal, stable stack for Step 1 MVP.
 - TypeScript (strict)
 - Vite
 - Material UI: https://mui.com/material-ui/llms.txt
+
+## Backend (optional, v0.1.1)
+
+- FastAPI
+- Python 3.11+
+- `langchain-gigachat` — GigaChat integration
 
 ## Core Libraries
 

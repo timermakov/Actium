@@ -8,7 +8,6 @@ import { Contact } from './pages/Contact/Contact'
 import { theme } from './app/theme'
 import './i18n'
 import './index.css'
-import {Chat} from "./pages/Chat/Chat.tsx";
 import Doc from "./pages/Doc/Doc.tsx";
 
 createRoot(document.getElementById('root')!).render(
@@ -20,7 +19,6 @@ createRoot(document.getElementById('root')!).render(
                 <Routes>
                     <Route path="/" element={<App />} />
                     <Route path="/doc" element={<Doc />} />
-                    <Route path="/chat" element={<Chat />} />
                     <Route path="/pricing" element={<Pricing />} />
                     <Route path="/contact" element={<Contact />} />
                 </Routes>
