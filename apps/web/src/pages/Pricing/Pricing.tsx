@@ -62,7 +62,7 @@ export function Pricing() {
                         ) as string[];
 
                         return (
-                            <Grid key={planId} item xs={12} md={4}>
+                            <Grid key={planId}>
                                 <Card
                                     onClick={() => setSelectedPlan(planId)}
                                     sx={{

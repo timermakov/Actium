@@ -2,7 +2,6 @@ import { AppBar, Toolbar, Box, Button, Typography, Stack } from '@mui/material'
 import { LanguageSwitch } from '../../shared/LanguageSwitch.tsx'
 import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router-dom'
-import React from 'react'
 
 export default function Header() {
     const { t } = useTranslation()
