@@ -1,7 +1,137 @@
 {
     "appTitle": "Actium",
     "appSubtitle": "Debt & Legal Document Generation Platform",
-    "mvpStep": "MVP Step 1 (v0.1.1)",
+    "mvpStep": "Generate DOCX legal documents in minutes.",
+    "header": {
+        "home": "Home",
+        "doc": "Doc",
+        "chat": "Chat",
+        "pricing": "Pricing",
+        "contact": "Contact",
+        "sign": "Sign In",
+        "register": "Register"
+    },
+    "pages": {
+        "pricing": {
+            "title": "Pricing",
+
+            "plans": {
+                "basic": {
+                    "title": "Basic",
+                    "price": "$9 / month",
+                    "features": [
+                        "Feature 1",
+                        "Feature 2",
+                        "Feature 3"
+                    ]
+                },
+                "pro": {
+                    "title": "Pro",
+                    "price": "$29 / month",
+                    "features": [
+                        "Feature 1",
+                        "Feature 2",
+                        "Feature 3",
+                        "Feature 4"
+                    ]
+                },
+                "enterprise": {
+                    "title": "Enterprise",
+                    "price": "$99 / month",
+                    "features": [
+                        "Feature 1",
+                        "Feature 2",
+                        "Feature 3",
+                        "Feature 4",
+                        "Feature 5"
+                    ]
+                }
+            },
+
+            "actions": {
+                "buy": "Buy"
+            },
+
+            "faq": {
+                "title": "Popular Questions",
+                "items": {
+                    "q1": {
+                        "question": "What is included in the Basic plan?",
+                        "answer": "Basic includes core features for small teams."
+                    },
+                    "q2": {
+                        "question": "Can I switch plans later?",
+                        "answer": "Yes, you can upgrade or downgrade anytime."
+                    },
+                    "q3": {
+                        "question": "Do you offer refunds?",
+                        "answer": "We offer refunds within 14 days of purchase."
+                    }
+                }
+            }
+        },
+        "contact": {
+            "title": "Contact page",
+
+            "form": {
+                "name": "Name",
+                "surname": "Surname",
+                "email": "Email",
+                "message": "Message",
+                "placeholder": "Value",
+                "submit": "Submit"
+            }
+        },
+        "home": {
+            "cta": {
+                "start": "Start Generating"
+            },
+
+            "howItWorks": {
+                "title": "How it works",
+                "subtitle": "Three simple steps to generate professional legal documents",
+                "steps": [
+                    {
+                        "title": "Upload DOCX template",
+                        "text": "Extract template placeholders from your existing legal documents"
+                    },
+                    {
+                        "title": "Upload CSV/XLSX data",
+                        "text": "Preview rows and headers from your data files to ensure correctness"
+                    },
+                    {
+                        "title": "Map fields & generate",
+                        "text": "Generate single DOCX documents or batch ZIP files with all your populated legal documents ready for use"
+                    }
+                ]
+            },
+
+            "features": {
+                "title": "Key features",
+                "items": [
+                    {
+                        "title": "Template placeholders",
+                        "text": "Simple syntax support"
+                    },
+                    {
+                        "title": "Word/Excel/PDF & other files",
+                        "text": "Multiple data format compatibility"
+                    },
+                    {
+                        "title": "Mapping import/export",
+                        "text": "Save and reuse JSON mappings"
+                    },
+                    {
+                        "title": "Download options",
+                        "text": "Single DOCX or batch ZIP files"
+                    }
+                ]
+            }
+        },
+        "chat": {
+            "title": "AI Chat page"
+        }
+    },
     "sections": {
         "template": "Template Upload",
         "data": "Data Upload",
@@ -98,6 +228,6 @@
     },
     "language": "Language",
     "status": {
-        "intro": "Upload a template and data file to start the workflow."
+        "intro": "Upload a DOCX template with placeholders, CSV/XLSV data, map filds, and download filled DOCX (single) or ZIP (batch) in minutes."
     }
 }
