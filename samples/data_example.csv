@@ -1,0 +1,3 @@
+debtor_name,address,case_id,debt_amount,due_date
+Ivan Petrov,"Moscow, Tverskaya 1",A-001,150000,2026-02-01
+Anna Smirnova,"Saint Petersburg, Nevsky 10",A-002,98000,2026-02-15
