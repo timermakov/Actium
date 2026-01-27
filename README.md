@@ -122,6 +122,8 @@ uvicorn main:app --reload --port 8001
 Frontend calls the API at `http://localhost:8001` by default.  
 To override, set `VITE_API_BASE_URL` in your local Vite env (not committed).
 
+CORS: set `CORS_ORIGINS` (comma-separated) in `apps/api/.env` to allow non-local UIs.
+
 ## Docker Compose (frontend + backend)
 
 ```
