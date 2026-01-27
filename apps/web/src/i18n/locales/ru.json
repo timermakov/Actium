@@ -164,7 +164,8 @@
         "errors": {
             "missingData": "Загрузите данные перед запросом сводки.",
             "missingTemplate": "Загрузите шаблон перед запросом советов.",
-            "requestFailed": "Ошибка AI запроса."
+            "requestFailed": "Ошибка AI запроса.",
+            "apiNotConfigured": "AI API не настроен для этого окружения."
         }
     },
     "actions": {
