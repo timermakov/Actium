@@ -20,7 +20,8 @@ import { readFileAsArrayBuffer, readFileAsText } from '../../utils/files'
 
 function App() {
     const { t, i18n } = useTranslation()
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8001'
+    const apiBaseUrl =
+        import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? "http://localhost:8001" : "")
     const [templateFields, setTemplateFields] = useState<TemplateField[]>([])
     const [templateBuffer, setTemplateBuffer] = useState<ArrayBuffer | null>(null)
     const [templateError, setTemplateError] = useState<string | null>(null)
@@ -291,6 +292,10 @@ function App() {
     }
 
     const requestAI = async (endpoint: string, payload: Record<string, unknown>) => {
+        if (!apiBaseUrl) {
+            setAiError(t("ai.errors.apiNotConfigured"))
+            return
+        }
         setAiLoading(true)
         setAiError(null)
         setAiResult(null)
