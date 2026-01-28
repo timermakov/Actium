@@ -129,6 +129,8 @@ CORS: set `CORS_ORIGINS` (comma-separated) in `apps/api/.env` to allow non-local
 Deploy from `apps/api` (or set the project root to that directory).  
 The API entrypoint is `apps/api/main.py` with `app = FastAPI(...)`.
 
+CORS: set `CORS_ORIGINS` (comma-separated) in `apps/api/.env` to allow non-local UIs.
+
 ## Docker Compose (frontend + backend)
 
 ```
