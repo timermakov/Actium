@@ -15,7 +15,15 @@ load_dotenv()
 
 app = FastAPI(title="Actium AI API", version="0.1.1")
 
-origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+raw_origins = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:5173,https://actium-docs.vercel.app",
+)
+origins = [
+    origin.strip().rstrip("/")
+    for origin in raw_origins.split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[origin.strip() for origin in origins if origin.strip()],
