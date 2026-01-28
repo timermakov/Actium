@@ -119,8 +119,15 @@ cd apps/api
 uvicorn main:app --reload --port 8001
 ```
 
-Frontend calls the API at `http://localhost:8001` by default.  
-To override, set `VITE_API_BASE_URL` in your local Vite env (not committed).
+Frontend calls the API at `http://localhost:8001` by default in dev.  
+To override, set `VITE_API_BASE_URL` to an absolute `http(s)://` URL (not committed).
+
+CORS: set `CORS_ORIGINS` (comma-separated) in `apps/api/.env` to allow non-local UIs.
+
+### Vercel deploy (FastAPI)
+
+Deploy from `apps/api` (or set the project root to that directory).  
+The API entrypoint is `apps/api/main.py` with `app = FastAPI(...)`.
 
 CORS: set `CORS_ORIGINS` (comma-separated) in `apps/api/.env` to allow non-local UIs.
 

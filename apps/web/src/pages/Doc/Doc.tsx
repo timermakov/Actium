@@ -20,8 +20,10 @@ import { readFileAsArrayBuffer, readFileAsText } from '../../utils/files'
 
 function App() {
     const { t, i18n } = useTranslation()
-    const apiBaseUrl =
-        import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? "http://localhost:8001" : "")
+    const rawApiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').trim()
+    const fallbackApiBaseUrl = import.meta.env.DEV ? 'http://localhost:8001' : ''
+    const normalizedApiBaseUrl = (rawApiBaseUrl || fallbackApiBaseUrl).replace(/\/+$/, '')
+    const apiBaseUrl = /^https?:\/\//i.test(normalizedApiBaseUrl) ? normalizedApiBaseUrl : ''
     const [templateFields, setTemplateFields] = useState<TemplateField[]>([])
     const [templateBuffer, setTemplateBuffer] = useState<ArrayBuffer | null>(null)
     const [templateError, setTemplateError] = useState<string | null>(null)
@@ -306,8 +308,15 @@ function App() {
                 body: JSON.stringify(payload),
             })
             if (!response.ok) {
-                const data = (await response.json()) as { detail?: string }
-                throw new Error(data.detail ?? t('ai.errors.requestFailed'))
+                const contentType = response.headers.get('content-type') ?? ''
+                let detail = ''
+                if (contentType.includes('application/json')) {
+                    const data = (await response.json()) as { detail?: string }
+                    detail = data.detail ?? ''
+                } else {
+                    detail = await response.text()
+                }
+                throw new Error(detail || t('ai.errors.requestFailed'))
             }
             const data = (await response.json()) as { content: string }
             setAiResult(data.content)
