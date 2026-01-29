@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 try:
     from langchain_gigachat import GigaChat
@@ -100,6 +100,11 @@ def generate_summary(payload: SummaryRequest) -> AIResponse:
         raise HTTPException(status_code=500, detail=f"AI request failed: {exc}") from exc
 
 
+@app.options("/ai/summary")
+def summary_preflight() -> Response:
+    return Response(status_code=204)
+
+
 @app.post("/ai/advice", response_model=AIResponse)
 def generate_advice(payload: AdviceRequest) -> AIResponse:
     if not payload.template_fields:
@@ -126,3 +131,8 @@ def generate_advice(payload: AdviceRequest) -> AIResponse:
         raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"AI request failed: {exc}") from exc
+
+
+@app.options("/ai/advice")
+def advice_preflight() -> Response:
+    return Response(status_code=204)
