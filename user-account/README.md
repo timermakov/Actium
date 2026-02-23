@@ -1,2 +1,1 @@
-# no-sql
-ITMO course for no-sql db
+# Backend on Go - users' accounts management
