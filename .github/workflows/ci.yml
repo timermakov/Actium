@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: apps/web
+        working-directory: templater/apps/web
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: apps/web/package-lock.json
+          cache-dependency-path: templater/apps/web/package-lock.json
 
       - name: Install
         run: npm ci
