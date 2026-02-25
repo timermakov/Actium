@@ -1,22 +1,31 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
-	"user-account/cmd/internal/service"
+	"user-account/cmd/internal/model"
 
 	"github.com/google/uuid"
 )
 
-type UserHandler struct {
-	userService *service.UserService
+// UserProvider - интерфейс бизнес-логики
+type UserProvider interface {
+	Delete(ctx context.Context, id uuid.UUID) error
+	UpdatePassword(ctx context.Context, id uuid.UUID, newPassword string) error
+	List(ctx context.Context) ([]model.User, error)
 }
 
-func NewUserHandler(userService *service.UserService) *UserHandler {
+// UserHandler - хендлер для ручек
+type UserHandler struct {
+	userService UserProvider
+}
+
+// NewUserHandler - конструктор
+func NewUserHandler(userService UserProvider) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
-// Delete /users/{id}
 func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request, id uuid.UUID) {
 	if r.Method != http.MethodDelete {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -31,7 +40,7 @@ func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request, id uuid.UUI
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// UpdatePassword /users/{id}/password
+// UpdatePassword - ручка /users/{id}/password
 func (h *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request, id uuid.UUID) {
 	if r.Method != http.MethodPatch {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -54,7 +63,7 @@ func (h *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request, id 
 	w.WriteHeader(http.StatusOK)
 }
 
-// List /users
+// List - ручка /users
 func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -73,6 +82,7 @@ func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ServeUserByID - метод-резолвер для ручек
 func (h *UserHandler) ServeUserByID(w http.ResponseWriter, r *http.Request, idStr string) {
 	id, err := uuid.Parse(idStr)
 	if err != nil {

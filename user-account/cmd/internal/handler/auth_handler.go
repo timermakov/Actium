@@ -1,19 +1,28 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
-	"user-account/cmd/internal/service"
 )
 
-type AuthHandler struct {
-	authService *service.AuthService
+// AuthProvider - интерфейс бизнес-логики
+type AuthProvider interface {
+	Register(ctx context.Context, email, password string) error
+	Login(ctx context.Context, email, password string) (string, error)
 }
 
-func NewAuthHandler(authService *service.AuthService) *AuthHandler {
+// AuthHandler - реализация ручек
+type AuthHandler struct {
+	authService AuthProvider // Используем интерфейс вместо указателя на структуру
+}
+
+// NewAuthHandler - конструктор
+func NewAuthHandler(authService AuthProvider) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
+// Register - ручка регистрации
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -37,6 +46,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+// Login - ручка /login
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
