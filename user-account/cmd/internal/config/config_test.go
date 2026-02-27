@@ -94,6 +94,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "valid config",
 			config: Config{
+				AppHost:    "localhost",
 				AppPort:    "8080",
 				DBHost:     "localhost",
 				DBPort:     "5432",
