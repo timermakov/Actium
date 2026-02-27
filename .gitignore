@@ -9,3 +9,6 @@ venv/
 .pytest_cache/
 .mypy_cache/
 .DS_Store
+
+# Node.js dependencies
+**/node_modules/
