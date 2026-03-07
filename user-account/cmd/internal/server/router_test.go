@@ -44,7 +44,7 @@ func TestNewRouter(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/register",
 			setupMock: func() {
-				mockAuthSvc.On("Register", mock.Anything, mock.Anything, mock.Anything).
+				mockAuthSvc.On("RegisterCard.tsx", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil).Maybe()
 			},
 			expectedStatus: http.StatusBadRequest,

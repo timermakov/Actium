@@ -68,7 +68,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = json.NewEncoder(w).Encode(map[string]string{"token": token})
+	resp := map[string]string{
+		"token": token,
+		"email": req.Email,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		return
 	}

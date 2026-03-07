@@ -78,3 +78,17 @@ func UserFromContext(ctx context.Context) *model.User {
 	u, _ := ctx.Value(userCtxKey).(*model.User)
 	return u
 }
+
+// AdminOnly пропускает запрос только если у пользователя роль "admin"
+func AdminOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := UserFromContext(r.Context())
+
+		if user == nil || user.Role != "admin" {
+			http.Error(w, "Forbidden: insufficient permissions", http.StatusForbidden)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
