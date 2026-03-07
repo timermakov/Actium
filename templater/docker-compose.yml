@@ -8,7 +8,7 @@ services:
     volumes:
       - ./apps/api:/app
     env_file:
-      - templater/apps/api/.env
+      - apps/api/.env
     command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
   web:
     build:

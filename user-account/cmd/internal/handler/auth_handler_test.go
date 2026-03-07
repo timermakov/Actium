@@ -106,7 +106,7 @@ func TestAuthHandler_Register(t *testing.T) {
 				"password": "password123",
 			},
 			mockBehavior: func(m *mocks.MockAuthService) {
-				m.On("Register", mock.Anything, "new@user.com", "password123").
+				m.On("RegisterCard.tsx", mock.Anything, "new@user.com", "password123").
 					Return(nil)
 			},
 			expectedStatus: http.StatusCreated,
@@ -118,7 +118,7 @@ func TestAuthHandler_Register(t *testing.T) {
 				"password": "password123",
 			},
 			mockBehavior: func(m *mocks.MockAuthService) {
-				m.On("Register", mock.Anything, "exists@user.com", "password123").
+				m.On("RegisterCard.tsx", mock.Anything, "exists@user.com", "password123").
 					Return(errors.New("user already exists"))
 			},
 			expectedStatus: http.StatusBadRequest,

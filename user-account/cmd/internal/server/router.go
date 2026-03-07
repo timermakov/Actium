@@ -6,6 +6,7 @@ import (
 	"user-account/cmd/internal/middleware"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 // NewRouter возвращает настроенный роутер с хендлерами
@@ -27,5 +28,12 @@ func NewRouter(healthHandler *handler.HealthHandler, authHandler *handler.AuthHa
 		userHandler.ServeUserByID(w, r, idStr)
 	}))).Methods(http.MethodDelete, http.MethodPatch)
 
-	return r
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+	})
+
+	return c.Handler(r)
 }
