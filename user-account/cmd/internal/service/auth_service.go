@@ -21,7 +21,7 @@ func NewAuthService(repo repository.UserRepository, secret string) *AuthService 
 	return &AuthService{repo: repo, jwtSecret: secret}
 }
 
-func (s *AuthService) Register(ctx context.Context, email, password string) error {
+func (s *AuthService) Register(ctx context.Context, email, password, nickname string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -30,6 +30,7 @@ func (s *AuthService) Register(ctx context.Context, email, password string) erro
 	user := &model.User{
 		ID:           uuid.New(),
 		Email:        email,
+		Nickname:     nickname,
 		PasswordHash: string(hash),
 		Role:         "user",
 	}
@@ -51,9 +52,11 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub":  user.ID.String(),
-		"role": user.Role,
-		"exp":  time.Now().Add(24 * time.Hour).Unix(),
+		"sub":      user.ID.String(),
+		"role":     user.Role,
+		"nickname": user.Nickname,
+		"email":    user.Email,
+		"exp":      time.Now().Add(24 * time.Hour).Unix(),
 	})
 
 	return token.SignedString([]byte(s.jwtSecret))

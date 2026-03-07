@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 	"user-account/cmd/internal/model"
@@ -14,19 +15,27 @@ type contextKey string
 
 const userCtxKey = contextKey("user")
 
+// JSONError отправляет структурированную ошибку (удобно для фронтенда)
+func jsonError(w http.ResponseWriter, message string, code int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	// Игнорируем ошибку записи, так как в middleware мы мало что можем сделать
+	_, _ = w.Write([]byte(`{"error": "` + message + `"}`))
+}
+
 // JWTAuth проверяет токен и добавляет пользователя в контекст
 func JWTAuth(secret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				http.Error(w, "Authorization header required", http.StatusUnauthorized)
+				jsonError(w, "Authorization header required", http.StatusUnauthorized)
 				return
 			}
 
 			parts := strings.SplitN(authHeader, " ", 2)
 			if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-				http.Error(w, "Invalid authorization header", http.StatusUnauthorized)
+				jsonError(w, "Invalid authorization format", http.StatusUnauthorized)
 				return
 			}
 
@@ -34,47 +43,65 @@ func JWTAuth(secret string) func(http.Handler) http.Handler {
 
 			token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-					return nil, jwt.ErrTokenMalformed
+					return nil, errors.New("unexpected signing method")
 				}
 				return []byte(secret), nil
 			})
+
 			if err != nil || !token.Valid {
-				http.Error(w, "Invalid token", http.StatusUnauthorized)
+				jsonError(w, "Invalid or expired token", http.StatusUnauthorized)
 				return
 			}
 
 			claims, ok := token.Claims.(jwt.MapClaims)
 			if !ok {
-				http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+				jsonError(w, "Invalid token claims", http.StatusUnauthorized)
 				return
 			}
 
-			subRaw, ok := claims["sub"].(string)
-			if !ok {
-				http.Error(w, "Invalid token sub claim", http.StatusUnauthorized)
-				return
-			}
+			subRaw, _ := claims["sub"].(string)
+			email, _ := claims["email"].(string)
+			nickname, _ := claims["nickname"].(string)
+			role, _ := claims["role"].(string)
 
 			userID, err := uuid.Parse(subRaw)
 			if err != nil {
-				http.Error(w, "Invalid user ID in token", http.StatusUnauthorized)
+				jsonError(w, "Invalid user ID in token", http.StatusUnauthorized)
 				return
 			}
 
-			role, _ := claims["role"].(string) // если нет роли — будет пустая строка
+			user := &model.User{
+				ID:       userID,
+				Email:    email,
+				Nickname: nickname,
+				Role:     role,
+			}
 
-			ctx := context.WithValue(r.Context(), userCtxKey, &model.User{
-				ID:   userID,
-				Role: role,
-			})
-
+			ctx := context.WithValue(r.Context(), userCtxKey, user)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-// UserFromContext возвращает пользователя из контекста, если он есть
+// UserFromContext возвращает пользователя из контекста
 func UserFromContext(ctx context.Context) *model.User {
-	u, _ := ctx.Value(userCtxKey).(*model.User)
+	u, ok := ctx.Value(userCtxKey).(*model.User)
+	if !ok {
+		return nil
+	}
 	return u
+}
+
+// AdminOnly пропускает только администраторов
+func AdminOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := UserFromContext(r.Context())
+
+		if user == nil || user.Role != "admin" {
+			jsonError(w, "Forbidden: insufficient permissions", http.StatusForbidden)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

@@ -1,234 +1,231 @@
 {
-    "appTitle": "Actium",
-    "appSubtitle": "Debt & Legal Document Generation Platform",
-    "mvpStep": "Generate DOCX legal documents in minutes.",
-    "header": {
-        "home": "Home",
-        "doc": "Doc",
-        "chat": "Chat",
-        "pricing": "Pricing",
-        "contact": "Contact",
-        "sign": "Sign In",
-        "register": "Register"
-    },
-    "pages": {
-        "pricing": {
-            "title": "Pricing",
-
-            "plans": {
-                "basic": {
-                    "title": "Basic",
-                    "price": "$9 / month",
-                    "features": [
-                        "Feature 1",
-                        "Feature 2",
-                        "Feature 3"
-                    ]
-                },
-                "pro": {
-                    "title": "Pro",
-                    "price": "$29 / month",
-                    "features": [
-                        "Feature 1",
-                        "Feature 2",
-                        "Feature 3",
-                        "Feature 4"
-                    ]
-                },
-                "enterprise": {
-                    "title": "Enterprise",
-                    "price": "$99 / month",
-                    "features": [
-                        "Feature 1",
-                        "Feature 2",
-                        "Feature 3",
-                        "Feature 4",
-                        "Feature 5"
-                    ]
-                }
-            },
-
-            "actions": {
-                "buy": "Buy"
-            },
-
-            "faq": {
-                "title": "Popular Questions",
-                "items": {
-                    "q1": {
-                        "question": "What is included in the Basic plan?",
-                        "answer": "Basic includes core features for small teams."
-                    },
-                    "q2": {
-                        "question": "Can I switch plans later?",
-                        "answer": "Yes, you can upgrade or downgrade anytime."
-                    },
-                    "q3": {
-                        "question": "Do you offer refunds?",
-                        "answer": "We offer refunds within 14 days of purchase."
-                    }
-                }
-            }
+  "appTitle": "Actium",
+  "appSubtitle": "Debt & Legal Document Generation Platform",
+  "mvpStep": "Generate DOCX legal documents in minutes.",
+  "header": {
+    "hello": "Hello,",
+    "admin": "Admin Panel",
+    "home": "Home",
+    "doc": "Docs",
+    "chat": "Chat",
+    "pricing": "Pricing",
+    "contact": "Contact",
+    "sign": "Sign In",
+    "register": "Register"
+  },
+  "pages": {
+    "pricing": {
+      "title": "Pricing",
+      "plans": {
+        "basic": {
+          "title": "Basic",
+          "price": "$9 / month",
+          "features": [
+            "Feature 1",
+            "Feature 2",
+            "Feature 3"
+          ]
         },
-        "contact": {
-            "title": "Contact page",
-
-            "form": {
-                "name": "Name",
-                "surname": "Surname",
-                "email": "Email",
-                "message": "Message",
-                "placeholder": "Value",
-                "submit": "Submit"
-            }
+        "pro": {
+          "title": "Pro",
+          "price": "$29 / month",
+          "features": [
+            "Feature 1",
+            "Feature 2",
+            "Feature 3",
+            "Feature 4"
+          ]
         },
-        "home": {
-            "cta": {
-                "start": "Start Generating"
-            },
-
-            "howItWorks": {
-                "title": "How it works",
-                "subtitle": "Three simple steps to generate professional legal documents",
-                "steps": [
-                    {
-                        "title": "Upload DOCX template",
-                        "text": "Extract template placeholders from your existing legal documents"
-                    },
-                    {
-                        "title": "Upload CSV/XLSX data",
-                        "text": "Preview rows and headers from your data files to ensure correctness"
-                    },
-                    {
-                        "title": "Map fields & generate",
-                        "text": "Generate single DOCX documents or batch ZIP files with all your populated legal documents ready for use"
-                    }
-                ]
-            },
-
-            "features": {
-                "title": "Key features",
-                "items": [
-                    {
-                        "title": "Template placeholders",
-                        "text": "Simple syntax support"
-                    },
-                    {
-                        "title": "Word/Excel/PDF & other files",
-                        "text": "Multiple data format compatibility"
-                    },
-                    {
-                        "title": "Mapping import/export",
-                        "text": "Save and reuse JSON mappings"
-                    },
-                    {
-                        "title": "Download options",
-                        "text": "Single DOCX or batch ZIP files"
-                    }
-                ]
-            }
-        },
-        "chat": {
-            "title": "AI Chat page"
+        "enterprise": {
+          "title": "Enterprise",
+          "price": "$99 / month",
+          "features": [
+            "Feature 1",
+            "Feature 2",
+            "Feature 3",
+            "Feature 4",
+            "Feature 5"
+          ]
         }
-    },
-    "sections": {
-        "template": "Template Upload",
-        "data": "Data Upload",
-        "mapping": "Field Mapping",
-        "generation": "Document Generation",
-        "dataQuality": "Data Quality",
-        "mappingHealth": "Mapping Health",
-        "ai": "AI Assistant"
-    },
-    "dataQuality": {
-        "rows": "Rows: {{count}}",
-        "columns": "Columns: {{count}}",
-        "emptyCells": "Empty cells: {{count}}",
-        "emptyRows": "Empty rows: {{count}}",
-        "duplicates": "Duplicate rows: {{count}}",
-        "noData": "Upload data to see quality metrics."
-    },
-    "mappingHealth": {
-        "mappedPercent": "Mapped: {{value}}%",
-        "unmapped": "Unmapped fields",
-        "allMapped": "All fields are mapped."
-    },
-    "ai": {
-        "noResult": "Run AI to see the response here.",
-        "loading": "Generating response...",
-        "language": {
-            "ru": "AI language: RU",
-            "en": "AI language: EN"
-        },
-        "errors": {
-            "missingData": "Upload data before requesting a summary.",
-            "missingTemplate": "Upload a template before requesting advice.",
-            "requestFailed": "AI request failed.",
-            "apiNotConfigured": "AI API is not configured for this environment."
+      },
+      "actions": {
+        "buy": "Buy Now"
+      },
+      "faq": {
+        "title": "Frequently Asked Questions",
+        "items": {
+          "q1": {
+            "question": "What is included in the Basic plan?",
+            "answer": "Basic includes core features for small teams."
+          },
+          "q2": {
+            "question": "Can I switch plans later?",
+            "answer": "Yes, you can upgrade or downgrade at any time."
+          },
+          "q3": {
+            "question": "Do you offer refunds?",
+            "answer": "We offer refunds within 14 days of purchase."
+          }
         }
+      }
     },
-    "actions": {
-        "uploadDocx": "Upload DOCX",
-        "uploadData": "Upload CSV/XLSX",
-        "importMapping": "Import Mapping",
-        "exportMapping": "Export Mapping",
-        "generateSingle": "Generate Single",
-        "generateBatch": "Generate Batch ZIP",
-        "aiSummary": "Summarize data",
-        "aiAdvice": "Get mapping advice"
+    "contact": {
+      "title": "Contact Us",
+      "form": {
+        "name": "First Name",
+        "surname": "Last Name",
+        "email": "Email Address",
+        "message": "Message",
+        "placeholder": "Enter value...",
+        "submit": "Send Message"
+      }
     },
-    "notes": {
-        "templateHint": "Placeholders must follow {{field_name}} format.",
-        "dataHint": "First row must contain headers.",
-        "mappingHint": "Map each template field to a data column.",
-        "generationHint": "Select a row for single generation or process all rows.",
-        "dataQualityHint": "Quick checks for completeness and duplicates.",
-        "mappingHealthHint": "Track how many template fields are mapped.",
-        "aiHint": "Get quick insights and mapping advice from AI."
+    "home": {
+      "cta": {
+        "start": "Start Generating"
+      },
+      "howItWorks": {
+        "title": "How It Works",
+        "subtitle": "Three simple steps to generate professional legal documents",
+        "steps": [
+          {
+            "title": "Upload DOCX Template",
+            "text": "Extract template placeholders from your existing legal documents."
+          },
+          {
+            "title": "Upload CSV/XLSX Data",
+            "text": "Preview rows and headers from your data files to ensure correctness."
+          },
+          {
+            "title": "Map Fields & Generate",
+            "text": "Generate single DOCX documents or batch ZIP files with all your populated legal documents ready for use."
+          }
+        ]
+      },
+      "features": {
+        "title": "Key Features",
+        "items": [
+          {
+            "title": "Template Placeholders",
+            "text": "Simple syntax support."
+          },
+          {
+            "title": "Multiple File Formats",
+            "text": "Compatible with Word, Excel, and CSV."
+          },
+          {
+            "title": "Mapping Import/Export",
+            "text": "Save and reuse JSON mappings for future projects."
+          },
+          {
+            "title": "Download Options",
+            "text": "Single DOCX or batch ZIP files."
+          }
+        ]
+      }
     },
-    "template": {
-        "fieldsDetected": "Detected fields: {{count}}"
-    },
-    "data": {
-        "summary": "Rows: {{rows}}, Columns: {{columns}}",
-        "noPreview": "No rows to preview.",
-        "previewNote": "Preview shows the first 10 rows."
-    },
-    "mapping": {
-        "notReady": "Upload a template and data file to map fields.",
-        "importFailed": "Failed to import the mapping file.",
-        "importNoMatches": "Imported mapping has no matching columns.",
-        "templateField": "Template Field",
-        "dataColumn": "Data Column",
-        "select": "Select column"
-    },
-    "generation": {
-        "rowSelect": "Row for single generation",
-        "noRows": "No rows",
-        "rowLabel": "Row {{index}}",
-        "errors": {
-            "missingTemplate": "Upload a template before generation.",
-            "missingData": "Upload data before generation.",
-            "incompleteMapping": "Complete the field mapping before generation.",
-            "singleFailed": "Failed to generate document.",
-            "batchFailed": "Batch completed with errors in rows: {{rows}}"
-        },
-        "warnings": {
-            "emptyFields": "Empty values for fields: {{fields}}",
-            "emptyRows": "Rows with empty values: {{rows}}"
-        }
+    "chat": {
+      "title": "AI Assistant"
+    }
+  },
+  "sections": {
+    "template": "Template Upload",
+    "data": "Data Upload",
+    "mapping": "Field Mapping",
+    "generation": "Document Generation",
+    "dataQuality": "Data Quality",
+    "mappingHealth": "Mapping Health",
+    "ai": "AI Assistant"
+  },
+  "dataQuality": {
+    "rows": "Rows: {{count}}",
+    "columns": "Columns: {{count}}",
+    "emptyCells": "Empty cells: {{count}}",
+    "emptyRows": "Empty rows: {{count}}",
+    "duplicates": "Duplicate rows: {{count}}",
+    "noData": "Upload data to see quality metrics."
+  },
+  "mappingHealth": {
+    "mappedPercent": "Mapped: {{value}}%",
+    "unmapped": "Unmapped fields",
+    "allMapped": "All fields are mapped."
+  },
+  "ai": {
+    "noResult": "Run AI to see the response here.",
+    "loading": "Generating response...",
+    "language": {
+      "ru": "AI language: RU",
+      "en": "AI language: EN"
     },
     "errors": {
-        "invalidDocx": "Only .docx templates are allowed.",
-        "noPlaceholders": "No placeholders were detected in the template.",
-        "templateParseFailed": "Failed to read the template.",
-        "invalidDataFile": "Only .csv or .xlsx files are allowed.",
-        "dataParseFailed": "Failed to read the data file.",
-        "noColumns": "No columns were detected in the data file."
-    },
-    "language": "Language",
-    "status": {
-        "intro": "Upload a DOCX template with placeholders, CSV/XLSV data, map filds, and download filled DOCX (single) or ZIP (batch) in minutes."
+      "missingData": "Please upload data before requesting a summary.",
+      "missingTemplate": "Please upload a template before requesting advice.",
+      "requestFailed": "AI request failed.",
+      "apiNotConfigured": "AI API is not configured for this environment."
     }
+  },
+  "actions": {
+    "logout": "Sign Out",
+    "uploadDocx": "Upload DOCX",
+    "uploadData": "Upload CSV/XLSX",
+    "importMapping": "Import Mapping",
+    "exportMapping": "Export Mapping",
+    "generateSingle": "Generate Single",
+    "generateBatch": "Generate Batch ZIP",
+    "aiSummary": "Summarize Data",
+    "aiAdvice": "Get Mapping Advice"
+  },
+  "notes": {
+    "templateHint": "Placeholders must follow the {{field_name}} format.",
+    "dataHint": "The first row must contain headers.",
+    "mappingHint": "Map each template field to a data column.",
+    "generationHint": "Select a row for single generation or process all rows.",
+    "dataQualityHint": "Quick checks for completeness and duplicates.",
+    "mappingHealthHint": "Track how many template fields are mapped.",
+    "aiHint": "Get quick insights and mapping advice from AI."
+  },
+  "template": {
+    "fieldsDetected": "Detected fields: {{count}}"
+  },
+  "data": {
+    "summary": "Rows: {{rows}}, Columns: {{columns}}",
+    "noPreview": "No rows to preview.",
+    "previewNote": "Preview shows the first 10 rows."
+  },
+  "mapping": {
+    "notReady": "Upload a template and data file to map fields.",
+    "importFailed": "Failed to import the mapping file.",
+    "importNoMatches": "Imported mapping has no matching columns.",
+    "templateField": "Template Field",
+    "dataColumn": "Data Column",
+    "select": "Select column"
+  },
+  "generation": {
+    "rowSelect": "Row for single generation",
+    "noRows": "No rows",
+    "rowLabel": "Row {{index}}",
+    "errors": {
+      "missingTemplate": "Upload a template before generation.",
+      "missingData": "Upload data before generation.",
+      "incompleteMapping": "Complete the field mapping before generation.",
+      "singleFailed": "Failed to generate document.",
+      "batchFailed": "Batch completed with errors in rows: {{rows}}"
+    },
+    "warnings": {
+      "emptyFields": "Empty values for fields: {{fields}}",
+      "emptyRows": "Rows with empty values: {{rows}}"
+    }
+  },
+  "errors": {
+    "invalidDocx": "Only .docx templates are allowed.",
+    "noPlaceholders": "No placeholders were detected in the template.",
+    "templateParseFailed": "Failed to read the template.",
+    "invalidDataFile": "Only .csv or .xlsx files are allowed.",
+    "dataParseFailed": "Failed to read the data file.",
+    "noColumns": "No columns were detected in the data file."
+  },
+  "language": "Language",
+  "status": {
+    "intro": "Upload a DOCX template with placeholders and CSV/XLSX data. Map the fields and download filled DOCX (single) or ZIP (batch) in minutes."
+  }
 }

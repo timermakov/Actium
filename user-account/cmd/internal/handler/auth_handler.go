@@ -6,70 +6,69 @@ import (
 	"net/http"
 )
 
-// AuthProvider - интерфейс бизнес-логики
 type AuthProvider interface {
-	Register(ctx context.Context, email, password string) error
+	Register(ctx context.Context, email, password, nickname string) error
 	Login(ctx context.Context, email, password string) (string, error)
 }
 
-// AuthHandler - реализация ручек
 type AuthHandler struct {
-	authService AuthProvider // Используем интерфейс вместо указателя на структуру
+	baseHandler
+	authService AuthProvider
 }
 
-// NewAuthHandler - конструктор
 func NewAuthHandler(authService AuthProvider) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
-// Register - ручка регистрации
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
+	var req RegisterRequest
 
-	var req struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		h.writeError(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.authService.Register(r.Context(), req.Email, req.Password); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err := req.Validate(); err != nil {
+		h.writeError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	if err := h.authService.Register(r.Context(), req.Email, req.Password, req.Nickname); err != nil {
+		h.writeError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	h.writeJSON(w, http.StatusCreated, map[string]string{
+		"status":  "ok",
+		"message": "User registered successfully",
+	})
 }
 
-// Login - ручка /login
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
+	var req LoginRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.writeError(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	var req struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+	if err := req.Validate(); err != nil {
+		h.writeError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	token, err := h.authService.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
-		http.Error(w, "invalid credentials", http.StatusUnauthorized)
+		h.writeError(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
-	err = json.NewEncoder(w).Encode(map[string]string{"token": token})
-	if err != nil {
-		return
-	}
+	h.writeJSON(w, http.StatusOK, map[string]string{
+		"token": token,
+		"email": req.Email,
+	})
+}
+
+func (h *AuthHandler) Logout(w http.ResponseWriter, _ *http.Request) {
+	h.writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
