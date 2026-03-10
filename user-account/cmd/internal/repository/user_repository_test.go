@@ -22,7 +22,6 @@ var testPool *pgxpool.Pool
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 
-	// Используем актуальный метод Run
 	pgContainer, err := postgres.Run(ctx,
 		"postgres:16-alpine",
 		postgres.WithDatabase("testdb"),
@@ -47,15 +46,16 @@ func TestMain(m *testing.M) {
 		log.Fatalf("failed to connect to db: %s", err)
 	}
 
-	// Миграции
+	// Схема должна СТРОГО соответствовать коду репозитория (Jet)
 	setupSQL := `
-	CREATE TABLE IF NOT EXISTS users (
-		id UUID PRIMARY KEY,
-		email TEXT UNIQUE NOT NULL,
-		password_hash TEXT NOT NULL,
-		role TEXT NOT NULL,
-		created_at TIMESTAMPTZ DEFAULT NOW()
-	);`
+    CREATE TABLE IF NOT EXISTS users (
+       id            UUID PRIMARY KEY,
+       email         TEXT UNIQUE NOT NULL,
+       nickname      TEXT UNIQUE NOT NULL,
+       password_hash TEXT NOT NULL,
+       role          TEXT NOT NULL,
+       created_at    TIMESTAMPTZ DEFAULT NOW()
+    );`
 	if _, err = testPool.Exec(ctx, setupSQL); err != nil {
 		log.Fatalf("failed to setup schema: %s", err)
 	}
@@ -63,7 +63,7 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	testPool.Close()
-	pgContainer.Terminate(ctx)
+	_ = pgContainer.Terminate(ctx)
 	os.Exit(code)
 }
 
@@ -72,34 +72,55 @@ func TestUserRepository_Create(t *testing.T) {
 	repo := NewPostgresUserRepository(testPool)
 	ctx := context.Background()
 
+	existingEmail := "existing@test.com"
+	existingNick := "existing_nick"
+	_ = repo.Create(ctx, &model.User{
+		ID:           uuid.New(),
+		Email:        existingEmail,
+		Nickname:     existingNick,
+		PasswordHash: "h",
+		Role:         "user",
+	})
+
 	tests := []struct {
 		name    string
 		user    *model.User
 		wantErr bool
 	}{
 		{
-			name: "1. Success",
+			name: "Success Creation",
 			user: &model.User{
 				ID:           uuid.New(),
-				Email:        fmt.Sprintf("create_%s@test.com", uuid.NewString()[:8]),
+				Email:        "new_user@test.com",
+				Nickname:     "new_nick",
 				PasswordHash: "hash",
 				Role:         "user",
 			},
 			wantErr: false,
 		},
 		{
-			name: "2. Duplicate Email",
+			name: "Duplicate Email",
 			user: &model.User{
 				ID:           uuid.New(),
-				Email:        "duplicate@test.com",
+				Email:        existingEmail,
+				Nickname:     "random_nick",
+				PasswordHash: "hash",
+				Role:         "user",
+			},
+			wantErr: true,
+		},
+		{
+			name: "Duplicate Nickname",
+			user: &model.User{
+				ID:           uuid.New(),
+				Email:        "another@test.com",
+				Nickname:     existingNick,
 				PasswordHash: "hash",
 				Role:         "user",
 			},
 			wantErr: true,
 		},
 	}
-
-	_ = repo.Create(ctx, &model.User{ID: uuid.New(), Email: "duplicate@test.com", PasswordHash: "h", Role: "u"})
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -115,64 +136,66 @@ func TestUserRepository_GetMethods(t *testing.T) {
 	repo := NewPostgresUserRepository(testPool)
 	ctx := context.Background()
 
-	u := &model.User{
+	refUser := &model.User{
 		ID:           uuid.New(),
-		Email:        fmt.Sprintf("get_%s@test.com", uuid.NewString()[:8]),
-		PasswordHash: "hash",
+		Email:        "find_me@test.com",
+		Nickname:     "find_me_nick",
+		PasswordHash: "secret_hash",
 		Role:         "admin",
 	}
-	_ = repo.Create(ctx, u)
+	assert.NoError(t, repo.Create(ctx, refUser))
 
 	tests := []struct {
-		name string
-		run  func(t *testing.T)
+		name      string
+		queryType string
+		queryVal  interface{}
+		wantErr   bool
 	}{
-		{
-			name: "1. Find by ID",
-			run: func(t *testing.T) {
-				res, err := repo.GetByID(ctx, u.ID)
-				assert.NoError(t, err)
-				assert.Equal(t, u.Email, res.Email)
-			},
-		},
-		{
-			name: "2. Find by Email",
-			run: func(t *testing.T) {
-				res, err := repo.GetByEmail(ctx, u.Email)
-				assert.NoError(t, err)
-				assert.Equal(t, u.ID, res.ID)
-			},
-		},
-		{
-			name: "3. Not Found ID",
-			run: func(t *testing.T) {
-				_, err := repo.GetByID(ctx, uuid.New())
-				assert.Error(t, err)
-			},
-		},
+		{name: "GetByID Success", queryType: "id", queryVal: refUser.ID, wantErr: false},
+		{name: "GetByID Not Found", queryType: "id", queryVal: uuid.New(), wantErr: true},
+		{name: "GetByEmail Success", queryType: "email", queryVal: refUser.Email, wantErr: false},
+		{name: "GetByEmail Not Found", queryType: "email", queryVal: "none@test.com", wantErr: true},
 	}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			tt.run(t)
+			var res *model.User
+			var err error
+
+			if tt.queryType == "id" {
+				res, err = repo.GetByID(ctx, tt.queryVal.(uuid.UUID))
+			} else {
+				res, err = repo.GetByEmail(ctx, tt.queryVal.(string))
+			}
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, refUser.Email, res.Email)
+				assert.Equal(t, refUser.Nickname, res.Nickname)
+			}
 		})
 	}
 }
 
 func TestUserRepository_UpdateAndDelete(t *testing.T) {
-	t.Parallel()
 	repo := NewPostgresUserRepository(testPool)
 	ctx := context.Background()
 
 	u := &model.User{
-		ID: uuid.New(), Email: "action@test.com", PasswordHash: "old", Role: "user",
+		ID:           uuid.New(),
+		Email:        "mutable@test.com",
+		Nickname:     "mutable_nick",
+		PasswordHash: "old_hash",
+		Role:         "user",
 	}
-	_ = repo.Create(ctx, u)
+	assert.NoError(t, repo.Create(ctx, u))
 
-	t.Run("UpdatePassword", func(t *testing.T) {
-		newHash := "new_hashed_pass"
+	t.Run("Update Password Success", func(t *testing.T) {
+		newHash := "brand_new_hash"
 		err := repo.UpdatePassword(ctx, u.ID, newHash)
 		assert.NoError(t, err)
 
@@ -180,12 +203,13 @@ func TestUserRepository_UpdateAndDelete(t *testing.T) {
 		assert.Equal(t, newHash, updated.PasswordHash)
 	})
 
-	t.Run("Delete", func(t *testing.T) {
+	t.Run("Delete User Success", func(t *testing.T) {
+		t.Parallel()
 		err := repo.Delete(ctx, u.ID)
 		assert.NoError(t, err)
 
 		_, err = repo.GetByID(ctx, u.ID)
-		assert.Error(t, err)
+		assert.Error(t, err, "User should not be found after deletion")
 	})
 }
 
@@ -194,16 +218,30 @@ func TestUserRepository_List(t *testing.T) {
 	repo := NewPostgresUserRepository(testPool)
 	ctx := context.Background()
 
-	countBefore, _ := repo.List(ctx)
+	initialList, _ := repo.List(ctx)
+	initialCount := len(initialList)
 
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 3; i++ {
 		_ = repo.Create(ctx, &model.User{
-			ID: uuid.New(), Email: fmt.Sprintf("list_%d_%s@t.com", i, uuid.NewString()),
-			PasswordHash: "h", Role: "u",
+			ID:           uuid.New(),
+			Email:        fmt.Sprintf("list_%d_%d@test.com", i, time.Now().UnixNano()),
+			Nickname:     fmt.Sprintf("nick_%d_%d", i, time.Now().UnixNano()),
+			PasswordHash: "h",
+			Role:         "u",
 		})
 	}
 
-	list, err := repo.List(ctx)
-	assert.NoError(t, err)
-	assert.GreaterOrEqual(t, len(list), len(countBefore)+2)
+	t.Run("Verify List Count and Content", func(t *testing.T) {
+		t.Parallel()
+		list, err := repo.List(ctx)
+		assert.NoError(t, err)
+		assert.GreaterOrEqual(t, len(list), initialCount+3)
+
+		for _, user := range list {
+			assert.NotEmpty(t, user.ID)
+			assert.NotEmpty(t, user.Email)
+			assert.NotEmpty(t, user.Nickname)
+			assert.False(t, user.CreatedAt.IsZero())
+		}
+	})
 }

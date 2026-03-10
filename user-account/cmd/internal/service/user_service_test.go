@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"user-account/cmd/internal/mocks"
+	"user-account/cmd/internal/gen/mocks"
 	"user-account/cmd/internal/model"
 
+	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -31,19 +31,23 @@ func TestUserService_UpdatePassword(t *testing.T) {
 			id:       userID,
 			password: newPass,
 			mockBehavior: func(m *mocks.MockUserRepository) {
-				m.On("UpdatePassword", mock.Anything, userID, mock.MatchedBy(func(hash string) bool {
-					err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(newPass))
-					return err == nil
-				})).Return(nil)
+				m.EXPECT().
+					UpdatePassword(gomock.Any(), userID, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, id uuid.UUID, hash string) error {
+						err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(newPass))
+						assert.NoError(t, err)
+						return nil
+					})
 			},
 			wantErr: false,
 		},
 		{
 			name:     "2. Repository Error",
 			id:       userID,
-			password: "any",
+			password: "any-password",
 			mockBehavior: func(m *mocks.MockUserRepository) {
-				m.On("UpdatePassword", mock.Anything, mock.Anything, mock.Anything).
+				m.EXPECT().
+					UpdatePassword(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(errors.New("db error"))
 			},
 			wantErr: true,
@@ -51,18 +55,15 @@ func TestUserService_UpdatePassword(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-
-			repo := new(mocks.MockUserRepository)
+			ctrl := gomock.NewController(t)
+			repo := mocks.NewMockUserRepository(ctrl)
 			tt.mockBehavior(repo)
 
 			svc := NewUserService(repo)
 			err := svc.UpdatePassword(context.Background(), tt.id, tt.password)
-
 			assert.Equal(t, tt.wantErr, err != nil)
-			repo.AssertExpectations(t)
 		})
 	}
 }
@@ -84,7 +85,9 @@ func TestUserService_List(t *testing.T) {
 		{
 			name: "Success Get List",
 			mockBehavior: func(m *mocks.MockUserRepository) {
-				m.On("List", mock.Anything).Return(mockUsers, nil)
+				m.EXPECT().
+					List(gomock.Any()).
+					Return(mockUsers, nil)
 			},
 			expectedLen: 2,
 			wantErr:     false,
@@ -92,19 +95,30 @@ func TestUserService_List(t *testing.T) {
 		{
 			name: "Empty List",
 			mockBehavior: func(m *mocks.MockUserRepository) {
-				m.On("List", mock.Anything).Return([]model.User{}, nil)
+				m.EXPECT().
+					List(gomock.Any()).
+					Return([]model.User{}, nil)
 			},
 			expectedLen: 0,
 			wantErr:     false,
 		},
+		{
+			name: "Repository Error",
+			mockBehavior: func(m *mocks.MockUserRepository) {
+				m.EXPECT().
+					List(gomock.Any()).
+					Return(nil, errors.New("query error"))
+			},
+			expectedLen: 0,
+			wantErr:     true,
+		},
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-
-			repo := new(mocks.MockUserRepository)
+			ctrl := gomock.NewController(t)
+			repo := mocks.NewMockUserRepository(ctrl)
 			tt.mockBehavior(repo)
 
 			svc := NewUserService(repo)
@@ -116,7 +130,6 @@ func TestUserService_List(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Len(t, users, tt.expectedLen)
 			}
-			repo.AssertExpectations(t)
 		})
 	}
 }
@@ -136,25 +149,35 @@ func TestUserService_Delete(t *testing.T) {
 			name: "Success Delete",
 			id:   userID,
 			mockBehavior: func(m *mocks.MockUserRepository) {
-				m.On("Delete", mock.Anything, userID).Return(nil)
+				m.EXPECT().
+					Delete(gomock.Any(), userID).
+					Return(nil)
 			},
 			wantErr: false,
+		},
+		{
+			name: "Delete Not Found or Error",
+			id:   userID,
+			mockBehavior: func(m *mocks.MockUserRepository) {
+				m.EXPECT().
+					Delete(gomock.Any(), userID).
+					Return(errors.New("user not found"))
+			},
+			wantErr: true,
 		},
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			repo := new(mocks.MockUserRepository)
+			ctrl := gomock.NewController(t)
+			repo := mocks.NewMockUserRepository(ctrl)
 			tt.mockBehavior(repo)
 
 			svc := NewUserService(repo)
 			err := svc.Delete(context.Background(), tt.id)
-
 			assert.Equal(t, tt.wantErr, err != nil)
-			repo.AssertExpectations(t)
 		})
 	}
 }

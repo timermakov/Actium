@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"user-account/cmd/internal/mocks"
+	"user-account/cmd/internal/gen/mocks"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestAuthHandler_Login(t *testing.T) {
@@ -18,47 +18,48 @@ func TestAuthHandler_Login(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		method         string
 		requestBody    interface{}
-		mockBehavior   func(m *mocks.MockAuthService)
+		mockBehavior   func(m *mocks.MockAuthProvider)
 		expectedStatus int
 		expectedBody   string
 	}{
 		{
-			name:   "1. Success Login",
-			method: http.MethodPost,
-			requestBody: map[string]string{
-				"email":    "test@example.com",
-				"password": "password123",
+			name: "1. Success Login",
+			requestBody: LoginRequest{
+				Email:    "test@example.com",
+				Password: "password123",
 			},
-			mockBehavior: func(m *mocks.MockAuthService) {
-				m.On("Login", mock.Anything, "test@example.com", "password123").
+			mockBehavior: func(m *mocks.MockAuthProvider) {
+				m.EXPECT().
+					Login(gomock.Any(), "test@example.com", "password123").
 					Return("fake-jwt-token", nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody:   `{"token":"fake-jwt-token"}`,
+			expectedBody:   `"token":"fake-jwt-token"`,
 		},
 		{
-			name:   "2. Invalid Credentials",
-			method: http.MethodPost,
-			requestBody: map[string]string{
-				"email":    "wrong@test.com",
-				"password": "wrong",
+			name: "2. Invalid Credentials",
+			requestBody: LoginRequest{
+				Email:    "wrong@test.com",
+				Password: "wrong_password",
 			},
-			mockBehavior: func(m *mocks.MockAuthService) {
-				m.On("Login", mock.Anything, "wrong@test.com", "wrong").
+			mockBehavior: func(m *mocks.MockAuthProvider) {
+				m.EXPECT().
+					Login(gomock.Any(), "wrong@test.com", "wrong_password").
 					Return("", errors.New("auth failed"))
 			},
 			expectedStatus: http.StatusUnauthorized,
-			expectedBody:   "invalid credentials",
+			expectedBody:   `"error":"Invalid credentials"`,
 		},
 		{
-			name:           "3. Method Not Allowed",
-			method:         http.MethodGet,
-			requestBody:    nil,
-			mockBehavior:   func(_ *mocks.MockAuthService) {},
-			expectedStatus: http.StatusMethodNotAllowed,
-			expectedBody:   "",
+			name: "3. Validation Error (Empty Email)",
+			requestBody: LoginRequest{
+				Email:    "",
+				Password: "password123",
+			},
+			mockBehavior:   func(m *mocks.MockAuthProvider) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   `"error":"email is required"`,
 		},
 	}
 
@@ -66,26 +67,23 @@ func TestAuthHandler_Login(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			mockService := new(mocks.MockAuthService)
-			tt.mockBehavior(mockService)
+			ctrl := gomock.NewController(t)
+			mockSvc := mocks.NewMockAuthProvider(ctrl)
+			tt.mockBehavior(mockSvc)
 
-			h := NewAuthHandler(mockService)
+			h := NewAuthHandler(mockSvc)
 
-			var body []byte
-			if tt.requestBody != nil {
-				body, _ = json.Marshal(tt.requestBody)
-			}
-			req := httptest.NewRequest(tt.method, "/login", bytes.NewBuffer(body))
+			body, _ := json.Marshal(tt.requestBody)
+			req := httptest.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(body))
+			req.Header.Set("Content-Type", "application/json")
+
 			w := httptest.NewRecorder()
-
 			h.Login(w, req)
 
 			assert.Equal(t, tt.expectedStatus, w.Code)
 			if tt.expectedBody != "" {
 				assert.Contains(t, w.Body.String(), tt.expectedBody)
 			}
-
-			mockService.AssertExpectations(t)
 		})
 	}
 }
@@ -95,52 +93,78 @@ func TestAuthHandler_Register(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		requestBody    map[string]string
-		mockBehavior   func(m *mocks.MockAuthService)
+		requestBody    interface{}
+		mockBehavior   func(m *mocks.MockAuthProvider)
 		expectedStatus int
+		expectedBody   string
 	}{
 		{
 			name: "1. Success Registration",
-			requestBody: map[string]string{
-				"email":    "new@user.com",
-				"password": "password123",
+			requestBody: RegisterRequest{
+				Email:    "new@user.com",
+				Password: "password123",
+				Nickname: "cool_user",
 			},
-			mockBehavior: func(m *mocks.MockAuthService) {
-				m.On("Register", mock.Anything, "new@user.com", "password123").
+			mockBehavior: func(m *mocks.MockAuthProvider) {
+				m.EXPECT().
+					Register(gomock.Any(), "new@user.com", "password123", "cool_user").
 					Return(nil)
 			},
 			expectedStatus: http.StatusCreated,
+			expectedBody:   `"status":"ok"`,
 		},
 		{
-			name: "2. Service Error (User Exists)",
-			requestBody: map[string]string{
-				"email":    "exists@user.com",
-				"password": "password123",
+			name: "2. Validation Error (Short Password)",
+			requestBody: RegisterRequest{
+				Email:    "test@user.com",
+				Password: "123",
+				Nickname: "nick",
 			},
-			mockBehavior: func(m *mocks.MockAuthService) {
-				m.On("Register", mock.Anything, "exists@user.com", "password123").
+			mockBehavior:   func(m *mocks.MockAuthProvider) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   `"error":"password must be at least 6 characters long"`,
+		},
+		{
+			name: "3. Service Error (User Exists)",
+			requestBody: RegisterRequest{
+				Email:    "exists@user.com",
+				Password: "password123",
+				Nickname: "exists_nick",
+			},
+			mockBehavior: func(m *mocks.MockAuthProvider) {
+				m.EXPECT().
+					Register(gomock.Any(), "exists@user.com", "password123", "exists_nick").
 					Return(errors.New("user already exists"))
 			},
 			expectedStatus: http.StatusBadRequest,
+			expectedBody:   `"error":"user already exists"`,
 		},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			mockSvc := new(mocks.MockAuthService)
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockSvc := mocks.NewMockAuthProvider(ctrl)
 			tt.mockBehavior(mockSvc)
+
 			h := NewAuthHandler(mockSvc)
 
 			body, _ := json.Marshal(tt.requestBody)
 			req := httptest.NewRequest(http.MethodPost, "/register", bytes.NewBuffer(body))
-			w := httptest.NewRecorder()
+			req.Header.Set("Content-Type", "application/json")
 
+			w := httptest.NewRecorder()
 			h.Register(w, req)
 
 			assert.Equal(t, tt.expectedStatus, w.Code)
-			mockSvc.AssertExpectations(t)
+			if tt.expectedBody != "" {
+				assert.Contains(t, w.Body.String(), tt.expectedBody)
+			}
 		})
 	}
 }

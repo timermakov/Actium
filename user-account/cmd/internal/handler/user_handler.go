@@ -9,84 +9,87 @@ import (
 	"github.com/google/uuid"
 )
 
-// UserProvider - интерфейс бизнес-логики
 type UserProvider interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 	UpdatePassword(ctx context.Context, id uuid.UUID, newPassword string) error
 	List(ctx context.Context) ([]model.User, error)
 }
 
-// UserHandler - хендлер для ручек
 type UserHandler struct {
+	baseHandler
 	userService UserProvider
 }
 
-// NewUserHandler - конструктор
 func NewUserHandler(userService UserProvider) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
-func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request, id uuid.UUID) {
-	if r.Method != http.MethodDelete {
-		w.WriteHeader(http.StatusMethodNotAllowed)
+// List - GET /users
+func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
+	users, err := h.userService.List(r.Context())
+	if err != nil {
+		h.writeError(w, "failed to fetch users", http.StatusInternalServerError)
 		return
 	}
 
+	type userResponse struct {
+		ID        uuid.UUID `json:"id"`
+		Email     string    `json:"email"`
+		Nickname  string    `json:"nickname"`
+		Role      string    `json:"role"`
+		CreatedAt string    `json:"created_at"`
+	}
+
+	resp := make([]userResponse, len(users))
+	for i, u := range users {
+		resp[i] = userResponse{
+			ID:        u.ID,
+			Email:     u.Email,
+			Nickname:  u.Nickname,
+			Role:      u.Role,
+			CreatedAt: u.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
+	}
+
+	h.writeJSON(w, http.StatusOK, resp)
+}
+
+// Delete - DELETE /users/{id}
+func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request, id uuid.UUID) {
 	if err := h.userService.Delete(r.Context(), id); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// UpdatePassword - ручка /users/{id}/password
+// UpdatePassword - PATCH /users/{id}
 func (h *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request, id uuid.UUID) {
-	if r.Method != http.MethodPatch {
-		w.WriteHeader(http.StatusMethodNotAllowed)
+	var req UpdatePasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.writeError(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	var req struct {
-		NewPassword string `json:"new_password"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+	if err := req.Validate(); err != nil {
+		h.writeError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if err := h.userService.UpdatePassword(r.Context(), id, req.NewPassword); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	h.writeJSON(w, http.StatusOK, map[string]string{"status": "password updated"})
 }
 
-// List - ручка /users
-func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	users, err := h.userService.List(r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = json.NewEncoder(w).Encode(users)
-	if err != nil {
-		return
-	}
-}
-
-// ServeUserByID - метод-резолвер для ручек
+// ServeUserByID - роутинг для /users/{id}
 func (h *UserHandler) ServeUserByID(w http.ResponseWriter, r *http.Request, idStr string) {
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		h.writeError(w, "invalid user ID format", http.StatusBadRequest)
 		return
 	}
 
@@ -96,6 +99,6 @@ func (h *UserHandler) ServeUserByID(w http.ResponseWriter, r *http.Request, idSt
 	case http.MethodPatch:
 		h.UpdatePassword(w, r, id)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		h.writeError(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
 }
