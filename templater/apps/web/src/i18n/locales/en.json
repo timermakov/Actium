@@ -13,6 +13,11 @@
     "sign": "Sign In",
     "register": "Register"
   },
+  "auth": {
+    "nickname": "Username",
+    "alreadyHaveAccount": "Already have an account?",
+    "no_account": "Don't have an account yet?"
+  },
   "pages": {
     "pricing": {
       "title": "Pricing",
@@ -77,6 +82,7 @@
         "email": "Email Address",
         "message": "Message",
         "placeholder": "Enter value...",
+        "placeholder_password": "Enter your password...",
         "submit": "Send Message"
       }
     },
@@ -98,7 +104,7 @@
           },
           {
             "title": "Map Fields & Generate",
-            "text": "Generate single DOCX documents or batch ZIP files with all your populated legal documents ready for use."
+            "text": "Generate single DOCX documents or batch ZIP files ready for use."
           }
         ]
       },
@@ -173,7 +179,9 @@
     "generateSingle": "Generate Single",
     "generateBatch": "Generate Batch ZIP",
     "aiSummary": "Summarize Data",
-    "aiAdvice": "Get Mapping Advice"
+    "aiAdvice": "Get Mapping Advice",
+    "createAccount": "Create Account",
+    "submitLogin": "Sign In"
   },
   "notes": {
     "templateHint": "Placeholders must follow the {{field_name}} format.",
@@ -182,7 +190,9 @@
     "generationHint": "Select a row for single generation or process all rows.",
     "dataQualityHint": "Quick checks for completeness and duplicates.",
     "mappingHealthHint": "Track how many template fields are mapped.",
-    "aiHint": "Get quick insights and mapping advice from AI."
+    "aiHint": "Get quick insights and mapping advice from AI.",
+    "registerHint": "Make sure your password is at least 8 characters long.",
+    "loginHint": "Enter your credentials to access your account."
   },
   "template": {
     "fieldsDetected": "Detected fields: {{count}}"

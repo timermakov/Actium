@@ -5,13 +5,18 @@ FRONTEND_DIR = templater/apps/web
 
 # ГЛАВНАЯ КОМАНДА
 run:
-	@echo "--- Starting Backend (Docker) ---"
 	cd $(BACKEND_DIR) && docker compose --env-file .env.local up -d --build
-	@echo "--- Preparing Frontend ---"
 	cd $(FRONTEND_DIR) && npm install
-	@echo "--- Launching Frontend (Vite) ---"
 	cd $(FRONTEND_DIR) && npm run dev
 
+run-together:
+	docker compose --env-file .env.local pull
+	docker compose --env-file .env.local up -d --no-build
 stop:
-	@echo "--- Stopping Services ---"
-	cd $(BACKEND_DIR) && docker compose down
+	docker compose --env-file .env.local down
+
+push-cloud:
+	docker compose --env-file .env.local build
+	docker push mgfallen/docflow-go:latest
+	docker push mgfallen/docflow-python:latest
+	docker push mgfallen/docflow-frontend:latest
