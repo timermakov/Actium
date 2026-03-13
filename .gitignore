@@ -29,6 +29,7 @@ vendor/
 
 # Ansible / secrets
 ansible-vault*
+infra/ansible/inventory.ini
 *id_rsa*
 *id_ed25519*
 *.pem
