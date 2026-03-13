@@ -10,7 +10,8 @@ resource "yandex_compute_instance" "vm" {
 
   boot_disk {
     initialize_params {
-      image_id = "fd81no7ub0p1nooono37"  # ubuntu-22-04-lts-v20241111
+      # ubuntu-22-04-lts-v20241111
+      image_id = "fd81no7ub0p1nooono37"
       size     = 20
     }
   }
