@@ -10,8 +10,7 @@ resource "yandex_compute_instance" "vm" {
 
   boot_disk {
     initialize_params {
-      # public Ubuntu 22.04 image ID; при необходимости замени на свой
-      image_id = "fd8q3e0q9ul4********"
+      image_id = "fd81no7ub0p1nooono37"  # ubuntu-22-04-lts-v20241111
       size     = 20
     }
   }
