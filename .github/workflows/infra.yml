@@ -9,7 +9,7 @@ on:
     paths:
       - "infra/**"
       - ".github/workflows/infra.yml"
-
+        
 jobs:
   terraform-validate:
     name: Terraform validate (Yandex)
