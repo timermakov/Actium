@@ -1,0 +1,76 @@
+services:
+  db:
+    image: postgres:16
+    container_name: docflow_db
+    restart: always
+    env_file:
+      - .env.local
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - docflow_net
+
+  user-account:
+    build:
+      context: ./user-account
+      dockerfile: Dockerfile
+    image: mgfallen/docflow-go:latest
+    container_name: docflow_go_backend
+    restart: on-failure
+    env_file:
+      - .env.local
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+    depends_on:
+      - db
+    networks:
+      - docflow_net
+
+  templater-api:
+    build:
+      context: ./templater/apps/api
+      dockerfile: Dockerfile
+    image: mgfallen/docflow-python:latest
+    container_name: docflow_python_api
+    restart: on-failure
+    env_file:
+      - .env.local
+    ports:
+      - "${PYTHON_API_PORT}:8001"
+    networks:
+      - docflow_net
+
+  frontend:
+    build:
+      context: ./templater/apps/web
+      dockerfile: Dockerfile
+    image: mgfallen/docflow-frontend:latest
+    container_name: docflow_frontend
+    env_file:
+      - .env.local
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+      VITE_USER_API_URL: ${VITE_USER_API_URL}
+    ports:
+      - "${FRONTEND_PORT}:5173"
+    depends_on:
+      - templater-api
+      - user-account
+    networks:
+      - docflow_net
+
+volumes:
+  db_data:
+
+networks:
+  docflow_net:
+    driver: bridge
