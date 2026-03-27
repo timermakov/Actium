@@ -1,19 +1,25 @@
 BACKEND_DIR = user-account
-FRONTEND_DIR = templater/apps/web
+FRONTEND_DIR = templater
 
-.PHONY: run stop clean
+.PHONY: run run-together stop reset-backend-db clean
 
 # ГЛАВНАЯ КОМАНДА
 run:
 	cd $(BACKEND_DIR) && docker compose --env-file .env.local up -d --build
-	cd $(FRONTEND_DIR) && npm install
-	cd $(FRONTEND_DIR) && npm run dev
+	cd $(FRONTEND_DIR) && docker compose --env-file ../.env.local up -d --build --renew-anon-volumes
 
 run-together:
-	docker compose --env-file .env.local pull
-	docker compose --env-file .env.local up -d --no-build
+	cd $(BACKEND_DIR) && docker compose --env-file .env.local pull
+	cd $(BACKEND_DIR) && docker compose --env-file .env.local up -d --no-build
+	cd $(FRONTEND_DIR) && docker compose --env-file ../.env.local pull
+	cd $(FRONTEND_DIR) && docker compose --env-file ../.env.local up -d --no-build --renew-anon-volumes
 stop:
-	docker compose --env-file .env.local down
+	cd $(BACKEND_DIR) && docker compose --env-file .env.local down
+	cd $(FRONTEND_DIR) && docker compose --env-file ../.env.local down
+
+reset-backend-db:
+	cd $(BACKEND_DIR) && docker compose --env-file .env.local down -v
+	cd $(BACKEND_DIR) && docker compose --env-file .env.local up -d --build
 
 push-cloud:
 	docker compose --env-file .env.local build
