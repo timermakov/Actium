@@ -1,9 +1,7 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:16
-    container_name: docflow_db
+    container_name: actium_db
     env_file:
       - .env.local
     environment:
@@ -15,9 +13,10 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
-  app:
+  user-account-backend:
     build: .
-    container_name: docflow_app
+    image: tsermakov/actium-user-account-backend:latest
+    container_name: actium_user_account_backend
     env_file:
       - .env.local
     environment:
@@ -32,7 +31,8 @@ services:
     ports:
       - "${APP_PORT}:${APP_PORT}"
     depends_on:
-      - db
+      db:
+        condition: service_started
 
 volumes:
   db_data:

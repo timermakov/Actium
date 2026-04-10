@@ -1,7 +1,7 @@
 BACKEND_DIR = user-account
 FRONTEND_DIR = templater/apps/web
 
-.PHONY: run stop clean
+.PHONY: run run-together stop clean push-cloud docker-buildx
 
 # ГЛАВНАЯ КОМАНДА
 run:
@@ -15,8 +15,12 @@ run-together:
 stop:
 	docker compose --env-file .env.local down
 
+docker-buildx:
+	docker buildx build --platform linux/amd64 -t tsermakov/actium-user-account-backend:latest --load ./user-account
+	docker buildx build --platform linux/amd64 -t tsermakov/actium-ai-backend:latest --load ./templater/apps/api
+	docker buildx build --platform linux/amd64 --build-arg VITE_API_BASE_URL=$${VITE_API_BASE_URL} -t tsermakov/actium-templater-frontend:latest --load ./templater/apps/web
+
 push-cloud:
-	docker compose --env-file .env.local build
-	docker push mgfallen/docflow-go:latest
-	docker push mgfallen/docflow-python:latest
-	docker push mgfallen/docflow-frontend:latest
+	docker buildx build --platform linux/amd64 -t tsermakov/actium-user-account-backend:latest --push ./user-account
+	docker buildx build --platform linux/amd64 -t tsermakov/actium-ai-backend:latest --push ./templater/apps/api
+	docker buildx build --platform linux/amd64 --build-arg VITE_API_BASE_URL=$${VITE_API_BASE_URL} -t tsermakov/actium-templater-frontend:latest --push ./templater/apps/web

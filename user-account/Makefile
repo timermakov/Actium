@@ -50,13 +50,13 @@ gen-mocks:
 	@echo "Mocks generated successfully in $(MOCKS_DEST)"
 
 lint:
-	docker compose exec app golangci-lint run
+	docker compose exec user-account-backend golangci-lint run
 
 lint-fix:
-	docker compose exec app golangci-lint run --fix
+	docker compose exec user-account-backend golangci-lint run --fix
 
 tidy:
-	docker compose exec app go mod tidy
+	docker compose exec user-account-backend go mod tidy
 
 # --- Миграции (Goose) ---
 migrate-up:

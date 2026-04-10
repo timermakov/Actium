@@ -1,5 +1,5 @@
 .env
-.env.*
+.env.local
 !.env.example
 __pycache__/
 *.py[cod]
@@ -12,3 +12,7 @@ venv/
 
 # Node.js dependencies
 **/node_modules/
+
+# Editor/IDE
+.idea/
+.vscode/
