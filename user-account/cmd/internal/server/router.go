@@ -10,7 +10,7 @@ import (
 )
 
 // NewRouter возвращает настроенный роутер с хендлерами
-func NewRouter(healthHandler *handler.HealthHandler, authHandler *handler.AuthHandler, userHandler *handler.UserHandler, jwtSecret string) http.Handler {
+func NewRouter(healthHandler *handler.HealthHandler, authHandler *handler.AuthHandler, userHandler *handler.UserHandler, jwtSecret string, allowedOrigins []string) http.Handler {
 	r := mux.NewRouter()
 
 	jwtMiddleware := middleware.JWTAuth(jwtSecret)
@@ -20,7 +20,7 @@ func NewRouter(healthHandler *handler.HealthHandler, authHandler *handler.AuthHa
 	r.HandleFunc("/register", authHandler.Register).Methods(http.MethodPost)
 	r.HandleFunc("/login", authHandler.Login).Methods(http.MethodPost)
 	r.HandleFunc("/logout", authHandler.Logout).Methods(http.MethodPost)
-	
+
 	r.Handle("/users", jwtMiddleware(http.HandlerFunc(userHandler.List))).Methods(http.MethodGet)
 
 	r.Handle("/users/{id}", jwtMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +30,7 @@ func NewRouter(healthHandler *handler.HealthHandler, authHandler *handler.AuthHa
 	}))).Methods(http.MethodDelete, http.MethodPatch)
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,

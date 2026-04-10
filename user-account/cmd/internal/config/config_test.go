@@ -8,14 +8,15 @@ import (
 
 func TestLoad(t *testing.T) {
 	validEnv := map[string]string{
-		"APP_HOST":    "localhost",
-		"APP_PORT":    "8080",
-		"DB_HOST":     "localhost",
-		"DB_PORT":     "5432",
-		"DB_USER":     "postgres",
-		"DB_PASSWORD": "password",
-		"DB_NAME":     "docflow",
-		"JWT_SECRET":  "secret",
+		"APP_HOST":             "localhost",
+		"APP_PORT":             "8080",
+		"DB_HOST":              "localhost",
+		"DB_PORT":              "5432",
+		"DB_USER":              "postgres",
+		"DB_PASSWORD":          "password",
+		"DB_NAME":              "docflow",
+		"JWT_SECRET":           "secret",
+		"CORS_ALLOWED_ORIGINS": "http://localhost:5173,http://127.0.0.1:5173",
 	}
 
 	tests := []struct {
@@ -51,6 +52,13 @@ func TestLoad(t *testing.T) {
 			},
 			expectPanic: true,
 		},
+		{
+			name: "missing CORS_ALLOWED_ORIGINS",
+			overrideEnv: map[string]string{
+				"CORS_ALLOWED_ORIGINS": "",
+			},
+			expectPanic: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -76,6 +84,7 @@ func TestLoad(t *testing.T) {
 
 			assert.Equal(t, "8080", cfg.AppPort)
 			assert.Equal(t, "localhost", cfg.DBHost)
+			assert.Equal(t, []string{"http://localhost:5173", "http://127.0.0.1:5173"}, cfg.CORSAllowedOrigins)
 
 			expectedURL := "postgres://postgres:password@localhost:5432/docflow?sslmode=disable"
 			assert.Equal(t, expectedURL, cfg.DBUrl)
@@ -94,27 +103,30 @@ func TestValidate(t *testing.T) {
 		{
 			name: "valid config",
 			config: Config{
-				AppHost:    "localhost",
-				AppPort:    "8080",
-				DBHost:     "localhost",
-				DBPort:     "5432",
-				DBUser:     "postgres",
-				DBPassword: "password",
-				DBName:     "docflow",
-				JWTSecret:  "secret",
+				AppHost:            "localhost",
+				AppPort:            "8080",
+				DBHost:             "localhost",
+				DBPort:             "5432",
+				DBUser:             "postgres",
+				DBPassword:         "password",
+				DBName:             "docflow",
+				JWTSecret:          "secret",
+				CORSAllowedOrigins: []string{"http://localhost:5173"},
 			},
 			wantError: false,
 		},
 		{
 			name: "invalid port",
 			config: Config{
-				AppPort:    "abc",
-				DBHost:     "localhost",
-				DBPort:     "5432",
-				DBUser:     "postgres",
-				DBPassword: "password",
-				DBName:     "docflow",
-				JWTSecret:  "secret",
+				AppHost:            "localhost",
+				AppPort:            "abc",
+				DBHost:             "localhost",
+				DBPort:             "5432",
+				DBUser:             "postgres",
+				DBPassword:         "password",
+				DBName:             "docflow",
+				JWTSecret:          "secret",
+				CORSAllowedOrigins: []string{"http://localhost:5173"},
 			},
 			wantError: true,
 		},

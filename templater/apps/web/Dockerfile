@@ -1,22 +1,29 @@
-FROM node:22-bullseye AS deps
+FROM node:22-bullseye AS builder
 
 WORKDIR /app
+
+ARG VITE_API_BASE_URL=http://localhost:8001
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
 COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM node:22-bullseye AS dev
+COPY . .
+RUN npm run build
 
-WORKDIR /app
+FROM nginx:1.27-alpine AS runtime
 
-ENV NODE_ENV=development
+RUN addgroup -S appgroup \
+    && adduser -S appuser -G appgroup \
+    && mkdir -p /var/cache/nginx /var/run /var/log/nginx \
+    && chown -R appuser:appgroup /var/cache/nginx /var/run /var/log/nginx /etc/nginx/conf.d
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY package.json package-lock.json ./
-COPY index.html vite.config.ts tsconfig.json tsconfig.app.json tsconfig.node.json ./
-COPY public ./public
-COPY src ./src
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx-main.conf /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 5173
+USER appuser
 
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

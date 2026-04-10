@@ -67,7 +67,7 @@ func TestNewRouter(t *testing.T) {
 			userHandler := handler.NewUserHandler(mockUserSvc)
 			healthHandler := handler.NewHealthHandler()
 
-			r := NewRouter(healthHandler, authHandler, userHandler, jwtSecret)
+			r := NewRouter(healthHandler, authHandler, userHandler, jwtSecret, []string{"http://localhost:5173"})
 
 			req := httptest.NewRequest(tt.method, tt.url, nil)
 			w := httptest.NewRecorder()

@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:16
-    container_name: docflow_db
+    container_name: actium_db
     restart: always
     env_file: .env.local
     environment:
@@ -18,11 +18,11 @@ services:
     networks:
       - backend_net
 
-  user-account:
+  user-account-backend:
     build:
       context: ./user-account
-    image: mgfallen/docflow-go:latest
-    container_name: docflow_go_backend
+    image: tsermakov/actium-user-account-backend:latest
+    container_name: actium_user_account_backend
     restart: on-failure
     env_file: .env.local
     environment:
@@ -34,29 +34,33 @@ services:
       - backend_net
       - frontend_net
 
-  templater-api:
+  ai-backend:
     build:
       context: ./templater/apps/api
-    image: mgfallen/docflow-python:latest
-    container_name: docflow_python_api
+    image: tsermakov/actium-ai-backend:latest
+    container_name: actium_ai_backend
     env_file: .env.local
     networks:
       - backend_net
       - frontend_net
 
-  frontend:
+  templater-frontend:
     build:
       context: ./templater/apps/web
-    image: mgfallen/docflow-frontend:latest
-    container_name: docflow_frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+    image: tsermakov/actium-templater-frontend:latest
+    container_name: actium_templater_frontend
     env_file: .env.local
     ports:
-      - "${FRONTEND_PORT}:5173"
+      - "${WEB_PORT}:80"
     networks:
       - frontend_net
     depends_on:
-      - templater-api
-      - user-account
+      ai-backend:
+        condition: service_started
+      user-account-backend:
+        condition: service_started
 
 volumes:
   db_data:

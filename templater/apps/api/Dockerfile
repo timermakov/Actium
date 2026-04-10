@@ -1,17 +1,20 @@
-FROM python:3.11-slim AS deps
+FROM python:3.11-slim-bookworm AS builder
 
-WORKDIR /opt/app
+WORKDIR /build
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
 ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 
-COPY requirements.txt ./requirements.txt
-RUN python -m venv "${VIRTUAL_ENV}" \
-    && pip install --no-cache-dir -r requirements.txt
+RUN python -m venv "${VIRTUAL_ENV}"
 
-FROM python:3.11-slim AS dev
+COPY requirements.txt ./requirements.txt
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
+
+FROM python:3.11-slim-bookworm AS runtime
 
 WORKDIR /app
 
@@ -20,9 +23,15 @@ ENV PYTHONUNBUFFERED=1
 ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 
-COPY --from=deps /opt/venv /opt/venv
-COPY requirements.txt /app/requirements.txt
-COPY main.py /app/main.py
+RUN groupadd --system appgroup \
+    && useradd --system --gid appgroup --home /app appuser
+
+COPY --from=builder /opt/venv /opt/venv
+COPY . .
+
+RUN chown -R appuser:appgroup /app
+
+USER appuser
 
 EXPOSE 8001
 

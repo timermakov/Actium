@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:16
-    container_name: docflow_db
+    container_name: actium_db
     env_file:
       - .env.local
     environment:
@@ -14,9 +14,10 @@ services:
       - db_data:/var/lib/postgresql/data
       - ./initdb:/docker-entrypoint-initdb.d
 
-  app:
+  user-account-backend:
     build: .
-    container_name: docflow_app
+    image: tsermakov/actium-user-account-backend:latest
+    container_name: actium_user_account_backend
     env_file:
       - .env.local
     environment:
@@ -27,10 +28,12 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       JWT_SECRET: ${JWT_SECRET}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
     ports:
       - "${APP_PORT}:${APP_PORT}"
     depends_on:
-      - db
+      db:
+        condition: service_started
 
 volumes:
   db_data:

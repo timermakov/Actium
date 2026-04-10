@@ -39,6 +39,7 @@ func main() {
 		authHandler,
 		userHandler,
 		cfg.JWTSecret,
+		cfg.CORSAllowedOrigins,
 	)
 
 	addr := fmt.Sprintf("%s:%s", cfg.AppHost, cfg.AppPort)
