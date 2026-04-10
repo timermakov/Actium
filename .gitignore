@@ -1,6 +1,8 @@
 .env
 .env.local
 !.env.example
+
+# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -8,11 +10,49 @@ __pycache__/
 venv/
 .pytest_cache/
 .mypy_cache/
-.DS_Store
 
-# Node.js dependencies
+# Node.js
 **/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Editor/IDE
-.idea/
+# Go
+vendor/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform.lock.hcl
+
+# Ansible / secrets
+ansible-vault*
+infra/ansible/inventory.ini
+*id_rsa*
+*id_ed25519*
+*.pem
+*.key
+*.pfx
+secrets.*
+credentials.*
+
+# Build / coverage artifacts
+dist/
+build/
+out/
+coverage/
+coverage.*
+*.lcov
+
+# Docker
+*.tar
+
+# IDE / OS
 .vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo

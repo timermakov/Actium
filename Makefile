@@ -1,19 +1,25 @@
 BACKEND_DIR = user-account
-FRONTEND_DIR = templater/apps/web
+FRONTEND_DIR = templater
 
 .PHONY: run run-together stop clean push-cloud docker-buildx
 
 # ГЛАВНАЯ КОМАНДА
 run:
 	cd $(BACKEND_DIR) && docker compose --env-file .env.local up -d --build
-	cd $(FRONTEND_DIR) && npm install
-	cd $(FRONTEND_DIR) && npm run dev
+	cd $(FRONTEND_DIR) && docker compose --env-file ../.env.local up -d --build --renew-anon-volumes
 
 run-together:
-	docker compose --env-file .env.local pull
-	docker compose --env-file .env.local up -d --no-build
+	cd $(BACKEND_DIR) && docker compose --env-file .env.local pull
+	cd $(BACKEND_DIR) && docker compose --env-file .env.local up -d --no-build
+	cd $(FRONTEND_DIR) && docker compose --env-file ../.env.local pull
+	cd $(FRONTEND_DIR) && docker compose --env-file ../.env.local up -d --no-build --renew-anon-volumes
 stop:
-	docker compose --env-file .env.local down
+	cd $(BACKEND_DIR) && docker compose --env-file .env.local down
+	cd $(FRONTEND_DIR) && docker compose --env-file ../.env.local down
+
+reset-backend-db:
+	cd $(BACKEND_DIR) && docker compose --env-file .env.local down -v
+	cd $(BACKEND_DIR) && docker compose --env-file .env.local up -d --build
 
 docker-buildx:
 	docker buildx build --platform linux/amd64 -t tsermakov/actium-user-account-backend:latest --load ./user-account

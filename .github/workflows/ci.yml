@@ -49,6 +49,7 @@ jobs:
   web-test:
     name: Web – Test
     runs-on: ubuntu-latest
+    needs: user-account-build
     defaults:
       run:
         working-directory: templater/apps/web

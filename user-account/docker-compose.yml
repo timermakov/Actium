@@ -12,6 +12,7 @@ services:
       - "${DB_PORT}:${DB_PORT}"
     volumes:
       - db_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
 
   user-account-backend:
     build: .
