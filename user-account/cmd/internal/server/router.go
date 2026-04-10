@@ -10,7 +10,7 @@ import (
 )
 
 // NewRouter возвращает настроенный роутер с хендлерами
-func NewRouter(healthHandler *handler.HealthHandler, authHandler *handler.AuthHandler, userHandler *handler.UserHandler, jwtSecret string) http.Handler {
+func NewRouter(healthHandler *handler.HealthHandler, authHandler *handler.AuthHandler, userHandler *handler.UserHandler, jwtSecret string, allowedOrigins []string) http.Handler {
 	r := mux.NewRouter()
 
 	jwtMiddleware := middleware.JWTAuth(jwtSecret)
@@ -30,7 +30,7 @@ func NewRouter(healthHandler *handler.HealthHandler, authHandler *handler.AuthHa
 	}))).Methods(http.MethodDelete, http.MethodPatch)
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://178.154.244.207/:5173"},
+		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,

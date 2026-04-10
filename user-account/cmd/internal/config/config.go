@@ -9,28 +9,30 @@ import (
 
 // Config - модель конфига
 type Config struct {
-	AppHost    string
-	AppPort    string
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
-	DBUrl      string
-	JWTSecret  string
+	AppHost            string
+	AppPort            string
+	DBHost             string
+	DBPort             string
+	DBUser             string
+	DBPassword         string
+	DBName             string
+	DBUrl              string
+	JWTSecret          string
+	CORSAllowedOrigins []string
 }
 
 // Load - прочитать из файла конфигурации
 func Load() *Config {
 	cfg := &Config{
-		AppHost:    getEnv("APP_HOST"),
-		AppPort:    getEnv("APP_PORT"),
-		DBHost:     getEnv("DB_HOST"),
-		DBPort:     getEnv("DB_PORT"),
-		DBUser:     getEnv("DB_USER"),
-		DBPassword: getEnv("DB_PASSWORD"),
-		DBName:     getEnv("DB_NAME"),
-		JWTSecret:  getEnv("JWT_SECRET"),
+		AppHost:            getEnv("APP_HOST"),
+		AppPort:            getEnv("APP_PORT"),
+		DBHost:             getEnv("DB_HOST"),
+		DBPort:             getEnv("DB_PORT"),
+		DBUser:             getEnv("DB_USER"),
+		DBPassword:         getEnv("DB_PASSWORD"),
+		DBName:             getEnv("DB_NAME"),
+		JWTSecret:          getEnv("JWT_SECRET"),
+		CORSAllowedOrigins: parseCommaSeparatedList(getEnv("CORS_ALLOWED_ORIGINS")),
 	}
 
 	if errs := cfg.Validate(); len(errs) > 0 {
@@ -76,6 +78,9 @@ func (c *Config) Validate() []error {
 	if c.JWTSecret == "" {
 		errs = append(errs, fmt.Errorf("JWT_SECRET is required"))
 	}
+	if len(c.CORSAllowedOrigins) == 0 {
+		errs = append(errs, fmt.Errorf("CORS_ALLOWED_ORIGINS is required (comma-separated, e.g. http://localhost:5173)"))
+	}
 
 	if c.AppPort != "" {
 		if _, err := strconv.Atoi(c.AppPort); err != nil {
@@ -94,6 +99,20 @@ func (c *Config) Validate() []error {
 
 func getEnv(key string) string {
 	return strings.TrimSpace(os.Getenv(key))
+}
+
+func parseCommaSeparatedList(s string) []string {
+	if s == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	var out []string
+	for _, p := range parts {
+		if t := strings.TrimSpace(p); t != "" {
+			out = append(out, t)
+		}
+	}
+	return out
 }
 
 func formatErrors(errs []error) string {
