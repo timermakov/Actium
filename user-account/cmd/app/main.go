@@ -42,7 +42,8 @@ func main() {
 		cfg.CORSAllowedOrigins,
 	)
 
-	addr := fmt.Sprintf("%s:%s", cfg.AppHost, cfg.AppPort)
+	addr := fmt.Sprintf("%s:%s", cfg.BackendHost, cfg.BackendPort)
+
 	srv := &http.Server{
 		Addr:         addr,
 		Handler:      mux,

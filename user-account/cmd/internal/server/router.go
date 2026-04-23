@@ -6,6 +6,7 @@ import (
 	"user-account/cmd/internal/middleware"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp" // Добавили
 	"github.com/rs/cors"
 )
 
@@ -13,13 +14,15 @@ import (
 func NewRouter(healthHandler *handler.HealthHandler, authHandler *handler.AuthHandler, userHandler *handler.UserHandler, jwtSecret string, allowedOrigins []string) http.Handler {
 	r := mux.NewRouter()
 
-	jwtMiddleware := middleware.JWTAuth(jwtSecret)
+	r.Handle("/metrics", promhttp.Handler())
 
 	r.HandleFunc("/health", healthHandler.Health).Methods(http.MethodGet)
 
 	r.HandleFunc("/register", authHandler.Register).Methods(http.MethodPost)
 	r.HandleFunc("/login", authHandler.Login).Methods(http.MethodPost)
 	r.HandleFunc("/logout", authHandler.Logout).Methods(http.MethodPost)
+
+	jwtMiddleware := middleware.JWTAuth(jwtSecret)
 
 	r.Handle("/users", jwtMiddleware(http.HandlerFunc(userHandler.List))).Methods(http.MethodGet)
 

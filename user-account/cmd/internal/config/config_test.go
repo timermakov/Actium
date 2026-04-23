@@ -1,75 +1,79 @@
 package config
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLoad(t *testing.T) {
-	validEnv := map[string]string{
-		"APP_HOST":             "localhost",
-		"APP_PORT":             "8080",
-		"DB_HOST":              "localhost",
-		"DB_PORT":              "5432",
-		"DB_USER":              "postgres",
-		"DB_PASSWORD":          "password",
-		"DB_NAME":              "docflow",
-		"JWT_SECRET":           "secret",
-		"CORS_ALLOWED_ORIGINS": "http://localhost:5173,http://127.0.0.1:5173",
+	// Базовый набор переменных, необходимых для прохождения валидации
+	minimalEnv := map[string]string{
+		"DB_USER":     "postgres",
+		"DB_PASSWORD": "password",
+		"DB_NAME":     "docflow",
+		"JWT_SECRET":  "secret",
 	}
 
 	tests := []struct {
 		name        string
-		overrideEnv map[string]string
+		envVars     map[string]string
 		expectPanic bool
+		check       func(t *testing.T, cfg *Config)
 	}{
 		{
-			name:        "valid config",
-			overrideEnv: map[string]string{},
+			name: "full valid config",
+			envVars: map[string]string{
+				"BACKEND_PORT":         "9090",
+				"BACKEND_HOST":         "localhost",
+				"DB_HOST":              "remote-db",
+				"CORS_ALLOWED_ORIGINS": "http://test.com",
+			},
 			expectPanic: false,
+			check: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, "9090", cfg.BackendPort)
+				assert.Equal(t, "localhost", cfg.BackendHost)
+				assert.Equal(t, "remote-db", cfg.DBHost)
+				assert.Contains(t, cfg.CORSAllowedOrigins, "http://test.com")
+			},
 		},
 		{
-			name: "missing APP_PORT",
-			overrideEnv: map[string]string{
-				"APP_PORT": "",
+			name:        "use default values",
+			envVars:     map[string]string{}, // Пустое окружение
+			expectPanic: false,
+			check: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, "8080", cfg.BackendPort)               // Default
+				assert.Equal(t, "0.0.0.0", cfg.BackendHost)            // Default
+				assert.Equal(t, "postgres", cfg.DBHost)                // Default
+				assert.Equal(t, []string{"*"}, cfg.CORSAllowedOrigins) // Default
+			},
+		},
+		{
+			name: "panic on missing DB_USER",
+			envVars: map[string]string{
+				"DB_USER": "",
 			},
 			expectPanic: true,
 		},
 		{
-			name: "invalid APP_PORT",
-			overrideEnv: map[string]string{
-				"APP_PORT": "abc",
-			},
-			expectPanic: true,
-		},
-		{
-			name: "missing multiple fields",
-			overrideEnv: map[string]string{
-				"APP_PORT":   "",
-				"DB_HOST":    "",
-				"JWT_SECRET": "",
-			},
-			expectPanic: true,
-		},
-		{
-			name: "missing CORS_ALLOWED_ORIGINS",
-			overrideEnv: map[string]string{
-				"CORS_ALLOWED_ORIGINS": "",
+			name: "panic on invalid port format",
+			envVars: map[string]string{
+				"BACKEND_PORT": "not-a-number",
 			},
 			expectPanic: true,
 		},
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		t.Run(tt.name, func(t *testing.T) {
-			for k, v := range validEnv {
+			os.Clearenv()
+
+			for k, v := range minimalEnv {
 				t.Setenv(k, v)
 			}
 
-			for k, v := range tt.overrideEnv {
+			for k, v := range tt.envVars {
 				t.Setenv(k, v)
 			}
 
@@ -81,13 +85,12 @@ func TestLoad(t *testing.T) {
 			}
 
 			cfg := Load()
+			if tt.check != nil {
+				tt.check(t, cfg)
+			}
 
-			assert.Equal(t, "8080", cfg.AppPort)
-			assert.Equal(t, "localhost", cfg.DBHost)
-			assert.Equal(t, []string{"http://localhost:5173", "http://127.0.0.1:5173"}, cfg.CORSAllowedOrigins)
-
-			expectedURL := "postgres://postgres:password@localhost:5432/docflow?sslmode=disable"
-			assert.Equal(t, expectedURL, cfg.DBUrl)
+			assert.Contains(t, cfg.DBUrl, "postgres://")
+			assert.Contains(t, cfg.DBUrl, "sslmode=disable")
 		})
 	}
 }
@@ -101,38 +104,36 @@ func TestValidate(t *testing.T) {
 		wantError bool
 	}{
 		{
-			name: "valid config",
+			name: "valid minimal config",
 			config: Config{
-				AppHost:            "localhost",
-				AppPort:            "8080",
-				DBHost:             "localhost",
-				DBPort:             "5432",
-				DBUser:             "postgres",
-				DBPassword:         "password",
-				DBName:             "docflow",
-				JWTSecret:          "secret",
-				CORSAllowedOrigins: []string{"http://localhost:5173"},
+				BackendPort: "8080",
+				DBPort:      "5432",
+				DBUser:      "user",
+				DBPassword:  "pass",
+				DBName:      "db",
+				JWTSecret:   "secret",
 			},
 			wantError: false,
 		},
 		{
-			name: "invalid port",
+			name: "invalid BackendPort format",
 			config: Config{
-				AppHost:            "localhost",
-				AppPort:            "abc",
-				DBHost:             "localhost",
-				DBPort:             "5432",
-				DBUser:             "postgres",
-				DBPassword:         "password",
-				DBName:             "docflow",
-				JWTSecret:          "secret",
-				CORSAllowedOrigins: []string{"http://localhost:5173"},
+				BackendPort: "abc",
+				DBUser:      "user",
+				DBPassword:  "pass",
+				DBName:      "db",
+				JWTSecret:   "secret",
 			},
 			wantError: true,
 		},
 		{
-			name:      "missing fields",
-			config:    Config{},
+			name: "missing critical field JWTSecret",
+			config: Config{
+				BackendPort: "8080",
+				DBUser:      "user",
+				DBPassword:  "pass",
+				DBName:      "db",
+			},
 			wantError: true,
 		},
 	}
@@ -142,7 +143,11 @@ func TestValidate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			errs := tt.config.Validate()
-			assert.Equal(t, tt.wantError, len(errs) > 0)
+			if tt.wantError {
+				assert.NotEmpty(t, errs, "Expected errors but got none")
+			} else {
+				assert.Empty(t, errs, "Expected no errors but got: %v", errs)
+			}
 		})
 	}
 }

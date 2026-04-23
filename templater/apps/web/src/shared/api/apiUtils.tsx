@@ -1,4 +1,4 @@
-export const API_URL = import.meta.env.VITE_AUTH_API_URL || 'http://localhost:8080';
+export const API_URL = import.meta.env.VITE_AUTH_API_URL || 'http://actium.local/api/userhttp://localhost:8080';
 
 /**
  * Универсальный обработчик ответов от сервера
