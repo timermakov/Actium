@@ -1,0 +1,257 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-ai-backend
+  namespace: actium-monitoring
+  labels:
+    grafana_dashboard: "1"
+    app: ai-backend
+    team: backend
+data:
+  ai-backend-metrics.json: |-
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "title": "AI API Metrics",
+          "type": "row"
+        },
+        {
+          "title": "AI Requests Rate (RPS)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "sum(rate(http_requests_total{namespace=~\"$namespace\", pod=~\"$pod\", path=~\"/ai/.*\"}[5m])) by (path, method)",
+              "legendFormat": "{{method}} {{path}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" },
+            "overrides": []
+          }
+        },
+        {
+          "title": "AI Error Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "sum(rate(http_requests_total{namespace=~\"$namespace\", pod=~\"$pod\", status=~\"4..|5..\"}[5m])) by (status, path)",
+              "legendFormat": "{{status}} {{path}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" },
+            "overrides": []
+          }
+        },
+        {
+          "title": "AI Latency P95",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\", pod=~\"$pod\", path=~\"/ai/.*\"}[5m])) by (le, path))",
+              "legendFormat": "P95 {{path}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "s", "min": 0 },
+            "overrides": []
+          }
+        },
+        {
+          "title": "GigaChat Processing Latency",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "histogram_quantile(0.95, sum(rate(ai_request_duration_seconds_bucket{namespace=~\"$namespace\"}[5m])) by (le, endpoint))",
+              "legendFormat": "P95 {{endpoint}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "s", "min": 0 },
+            "overrides": []
+          }
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 },
+          "title": "Pod Resources",
+          "type": "row"
+        },
+        {
+          "title": "CPU Request by Pod",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 18 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$pod\", resource=\"cpu\", container=\"ai-api\"}",
+              "legendFormat": "{{pod}} - request",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "short", "min": 0 },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Memory Request by Pod (MiB)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 18 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$pod\", resource=\"memory\", container=\"ai-api\"} / 1024 / 1024",
+              "legendFormat": "{{pod}} - request",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "mebibytes", "min": 0 },
+            "overrides": []
+          }
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 26 },
+          "title": "Pod Status",
+          "type": "row"
+        },
+        {
+          "title": "Pod Status",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 8, "x": 0, "y": 27 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$pod\"}",
+              "legendFormat": "{{pod}} - {{phase}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value"
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "none" },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Pod Restarts",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 8, "x": 8, "y": 27 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "kube_pod_container_status_restarts_total{namespace=~\"$namespace\", pod=~\"$pod\"}",
+              "legendFormat": "{{pod}}/{{container}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value"
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "none" },
+            "overrides": []
+          }
+        },
+        {
+          "title": "AI Success Rate",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 8, "x": 16, "y": 27 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "sum(rate(ai_requests_total{namespace=~\"$namespace\", status=\"2xx\"}[5m])) / sum(rate(ai_requests_total{namespace=~\"$namespace\"}[5m])) * 100",
+              "legendFormat": "Success %",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value"
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "percent", "min": 0, "max": 100 },
+            "overrides": []
+          }
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 36,
+      "style": "dark",
+      "tags": ["ai-backend", "api", "actium", "ai"],
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "query": "label_values(kube_pod_container_resource_requests{pod=~\"ai-backend.*\"}, namespace)",
+            "multi": false,
+            "includeAll": false,
+            "label": "Namespace",
+            "refresh": 1,
+            "datasource": { "type": "prometheus" },
+            "current": { "text": "actium-backend", "value": "actium-backend" }
+          },
+          {
+            "name": "pod",
+            "type": "query",
+            "query": "label_values(kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"ai-backend.*\"}, pod)",
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".*",
+            "label": "Pod",
+            "refresh": 1,
+            "datasource": { "type": "prometheus" },
+            "current": { "text": ["All"], "value": ["$__all"] }
+          }
+        ]
+      },
+      "time": { "from": "now-1h", "to": "now" },
+      "title": "AI Backend: API & Pod Resources",
+      "uid": "ai-backend-001",
+      "version": 1
+    }

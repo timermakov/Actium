@@ -2,8 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: user-account-backend
+  namespace: actium-backend
   labels:
     app: user-account-backend
+    component: backend
 spec:
   replicas: 1
   selector:
@@ -13,6 +15,7 @@ spec:
     metadata:
       labels:
         app: user-account-backend
+        component: backend
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/path: "/metrics"
@@ -20,8 +23,8 @@ spec:
     spec:
       containers:
         - name: backend
-          image: tsermakov/actium-user-account-backend:latest
-          imagePullPolicy: Always
+          image: mgfallen/actium-user-account-backend:latest
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               cpu: "100m"
@@ -32,21 +35,25 @@ spec:
           envFrom:
             - configMapRef:
                 name: backend-config
+                optional: true
           env:
             - name: DB_HOST
-              value: "db"
+              value: "db.actium-database.svc.cluster.local"
             - name: DB_PORT
               value: "5432"
+            - name: APP_HOST
+              value: "0.0.0.0"
+            - name: APP_PORT
+              value: "8080"
           ports:
-            - containerPort: 8080
+            - name: http-metrics
+              containerPort: 8080
           readinessProbe:
             httpGet:
               path: /health
               port: 8080
-            initialDelaySeconds: 15 # Даем время на прогрев
+            initialDelaySeconds: 15
             periodSeconds: 10
-            successThreshold: 1
-            failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /health
@@ -58,11 +65,16 @@ apiVersion: v1
 kind: Service
 metadata:
   name: user-account-backend
+  namespace: actium-backend
+  labels:
+    app: user-account-backend
+    component: backend
 spec:
   selector:
     app: user-account-backend
   ports:
-    - protocol: TCP
+    - name: http-metrics
+      protocol: TCP
       port: 8080
       targetPort: 8080
 ---
@@ -70,6 +82,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: user-backend-hpa
+  namespace: actium-backend
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

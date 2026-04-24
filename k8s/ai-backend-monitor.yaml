@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ai-backend-monitor
+  namespace: monitoring
+  labels:
+    release: my-release
+spec:
+  namespaceSelector:
+    matchNames:
+      - default
+  selector:
+    matchLabels:
+      app: ai-backend
+  endpoints:
+    - port: http-metrics
+      path: /metrics
+      interval: 15s

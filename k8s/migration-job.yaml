@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: user-account-db-migrate
+spec:
+  # Джоб удалится через 100 секунд после успеха, чтобы не мусорить
+  ttlSecondsAfterFinished: 100
+  template:
+    spec:
+      securityContext:
+        runAsUser: 0
+      containers:
+        - name: migrate
+          image: mgfallen/actium-user-account-backend:v1.0.2
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "--- Checking environment ---"
+              ls -l /app && ls -l /app/migrations
+              echo "--- Running migrations ---"
+              /app/goose -dir /app/migrations postgres "host=$(DB_HOST) port=$(DB_PORT) user=$(DB_USER) password=$(DB_PASSWORD) dbname=$(DB_NAME) sslmode=disable" up
+          envFrom:
+            - configMapRef:
+                name: backend-config
+          env:
+            - name: DB_HOST
+              value: "db"
+            - name: DB_PORT
+              value: "5432"
+      restartPolicy: OnFailure
