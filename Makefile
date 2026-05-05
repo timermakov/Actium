@@ -4,6 +4,11 @@ K8S_DIR      = k8s
 CONFIG_FILE  = .env.local
 IMAGE_TAG    = v1.0.2
 
+K8S_BACKEND_NS    = actium-backend
+K8S_FRONTEND_NS   = actium-frontend
+K8S_MONITORING_NS = actium-monitoring
+K8S_DATABASE_NS   = actium-database
+
 BACKEND_IMG  = mgfallen/actium-user-account-backend:$(IMAGE_TAG)
 AI_IMG       = mgfallen/actium-ai-backend:$(IMAGE_TAG)
 FRONTEND_IMG = mgfallen/actium-templater-frontend:$(IMAGE_TAG)
@@ -11,7 +16,7 @@ FRONTEND_IMG = mgfallen/actium-templater-frontend:$(IMAGE_TAG)
 YELLOW = \033[0;33m
 NC     = \033[0m
 
-.PHONY: run stop clean build-all push-cloud push-local deploy migrate status restart logs-back reset-db
+.PHONY: run stop clean build-all push-cloud push-local start-cluster deploy deploy-local migrate status restart logs-back reset-db
 
 run:
 	cd $(BACKEND_DIR) && docker compose --env-file .env.local up -d --build
@@ -31,9 +36,7 @@ build-all: build-frontend build-backend build-ai
 
 build-frontend:
 	@echo "$(YELLOW)--- Building Frontend ---$(NC)"
-	docker build --no-cache \
-       --build-arg VITE_API_BASE_URL=/api/user \
-       -t $(FRONTEND_IMG) ./$(FRONTEND_DIR)/apps/web
+	docker build --no-cache --build-arg VITE_API_BASE_URL=/api/user -t $(FRONTEND_IMG) ./$(FRONTEND_DIR)/apps/web
 
 build-backend:
 	@echo "$(YELLOW)--- Building Backend ---$(NC)"
@@ -67,35 +70,73 @@ start-cluster:
 
 deploy:
 	@echo "$(YELLOW)--- Deploying to K8s ---$(NC)"
-	-kubectl delete configmap backend-config --ignore-not-found
-	kubectl create configmap backend-config --from-env-file=$(CONFIG_FILE)
+	kubectl apply -f $(K8S_DIR)/namespaces.yaml
+	kubectl create configmap backend-config -n $(K8S_BACKEND_NS) --from-env-file=$(CONFIG_FILE) --dry-run=client -o yaml | kubectl apply -f -
+	kubectl create configmap backend-config -n $(K8S_DATABASE_NS) --from-env-file=$(CONFIG_FILE) --dry-run=client -o yaml | kubectl apply -f -
+	kubectl apply -f $(K8S_DIR)/postgres.yaml
+	kubectl apply -f $(K8S_DIR)/user-backend.yaml
+	kubectl apply -f $(K8S_DIR)/ai-backend.yaml
+	kubectl apply -f $(K8S_DIR)/frontend.yaml
+	kubectl apply -f $(K8S_DIR)/prometheus.yaml
+	kubectl apply -f $(K8S_DIR)/node-exporter.yaml
+	kubectl apply -f $(K8S_DIR)/kube-state-metrics.yaml
+	kubectl apply -f $(K8S_DIR)/grafana-provisioning.yaml
+	kubectl apply -f $(K8S_DIR)/grafana-dashboard-user-backend.yaml
+	kubectl apply -f $(K8S_DIR)/grafana-dashboard-ai-backend.yaml
+	kubectl apply -f $(K8S_DIR)/grafana-dashboard-frontend.yaml
+	kubectl apply -f $(K8S_DIR)/grafana-dashboard-k8s-pods.yaml
+	kubectl apply -f $(K8S_DIR)/grafana.yaml
+	kubectl apply -f $(K8S_DIR)/ingress-backend.yaml
+	kubectl apply -f $(K8S_DIR)/ingress-grafana.yaml
+	kubectl apply -f $(K8S_DIR)/ingress.yaml
+	kubectl -n $(K8S_BACKEND_NS) set image deployment/user-account-backend backend=$(BACKEND_IMG)
+	kubectl -n $(K8S_BACKEND_NS) set image deployment/ai-backend ai-api=$(AI_IMG)
+	kubectl -n $(K8S_FRONTEND_NS) set image deployment/frontend web=$(FRONTEND_IMG)
+	kubectl -n $(K8S_DATABASE_NS) rollout status deployment/db --timeout=180s
+	kubectl -n $(K8S_BACKEND_NS) rollout status deployment/user-account-backend --timeout=180s
+	kubectl -n $(K8S_BACKEND_NS) rollout status deployment/ai-backend --timeout=180s
+	kubectl -n $(K8S_FRONTEND_NS) rollout status deployment/frontend --timeout=180s
+	kubectl -n $(K8S_MONITORING_NS) rollout status deployment/prometheus --timeout=180s
+	kubectl -n $(K8S_MONITORING_NS) rollout status deployment/grafana --timeout=180s
 
-	kubectl apply -f $(K8S_DIR)/
-
-	kubectl set image deployment/user-account-backend backend=$(BACKEND_IMG)
-	kubectl set image deployment/ai-backend ai-api=$(AI_IMG)
-	kubectl set image deployment/frontend web=$(FRONTEND_IMG)
-
-	$(MAKE) restart
+deploy-local: push-local deploy
 
 migrate:
 	@echo "$(YELLOW)--- Running DB Migrations ---$(NC)"
-	-kubectl delete job user-account-db-migrate --ignore-not-found
+	-kubectl -n $(K8S_BACKEND_NS) delete job user-account-db-migrate --ignore-not-found
 	kubectl apply -f $(K8S_DIR)/migration-job.yaml
-	kubectl wait --for=condition=complete --timeout=60s job/user-account-db-migrate
-	kubectl logs -l job-name=user-account-db-migrate
+	kubectl -n $(K8S_BACKEND_NS) wait --for=condition=complete --timeout=180s job/user-account-db-migrate
+	kubectl -n $(K8S_BACKEND_NS) logs -l job-name=user-account-db-migrate
 
 status:
-	kubectl get pods,svc,ingress,hpa
+	kubectl get pods,svc,ingress,hpa -A
 
 restart:
-	kubectl rollout restart deployment user-account-backend
-	kubectl rollout restart deployment ai-backend
-	kubectl rollout restart deployment frontend
+	kubectl -n $(K8S_BACKEND_NS) rollout restart deployment user-account-backend
+	kubectl -n $(K8S_BACKEND_NS) rollout restart deployment ai-backend
+	kubectl -n $(K8S_FRONTEND_NS) rollout restart deployment frontend
 
 logs-back:
-	kubectl logs -l app=user-account-backend -f
+	kubectl -n $(K8S_BACKEND_NS) logs -l app=user-account-backend -f
 
 clean:
-	kubectl delete -f $(K8S_DIR)/
-	-kubectl delete configmap backend-config
+	-kubectl delete -f $(K8S_DIR)/ingress.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/ingress-grafana.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/ingress-backend.yaml --ignore-not-found
+	-kubectl -n $(K8S_FRONTEND_NS) delete ingress actium-ingress --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/grafana.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/grafana-dashboard-k8s-pods.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/grafana-dashboard-frontend.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/grafana-dashboard-ai-backend.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/grafana-dashboard-user-backend.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/grafana-provisioning.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/kube-state-metrics.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/node-exporter.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/prometheus.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/frontend.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/ai-backend.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/user-backend.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/postgres.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/migration-job.yaml --ignore-not-found
+	-kubectl -n $(K8S_BACKEND_NS) delete configmap backend-config --ignore-not-found
+	-kubectl -n $(K8S_DATABASE_NS) delete configmap backend-config --ignore-not-found

@@ -1,38 +1,14 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: actium-ingress
+  name: actium-frontend-ingress
   namespace: actium-frontend
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
-    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   rules:
     - http:
         paths:
-          - path: /api/user/(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: user-account-backend
-                port:
-                  number: 8080
-          - path: /api/ai/(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: ai-backend
-                port:
-                  number: 8001
-          - path: /grafana/?(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: grafana
-                port:
-                  number: 80
-          - path: /(.*)
-            pathType: ImplementationSpecific
+          - path: /
+            pathType: Prefix
             backend:
               service:
                 name: frontend

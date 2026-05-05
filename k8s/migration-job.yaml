@@ -2,6 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: user-account-db-migrate
+  namespace: actium-backend
 spec:
   # Джоб удалится через 100 секунд после успеха, чтобы не мусорить
   ttlSecondsAfterFinished: 100
@@ -25,7 +26,7 @@ spec:
                 name: backend-config
           env:
             - name: DB_HOST
-              value: "db"
+              value: "db.actium-database.svc.cluster.local"
             - name: DB_PORT
               value: "5432"
       restartPolicy: OnFailure
