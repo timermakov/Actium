@@ -128,9 +128,9 @@ jobs:
     permissions:
       contents: read
     env:
-      REGISTRY_NAMESPACE: mgfallen
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      DOCKERHUB_NAMESPACE: ${{ secrets.DOCKERHUB_NAMESPACE }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -143,7 +143,9 @@ jobs:
             echo "available=false" >> "$GITHUB_OUTPUT"
             echo "Docker Hub credentials are missing. Skipping push steps."
           else
+            namespace="${DOCKERHUB_NAMESPACE:-$DOCKERHUB_USERNAME}"
             echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "namespace=${namespace}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Setup Docker Buildx
@@ -165,7 +167,7 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: |
-            ${{ env.REGISTRY_NAMESPACE }}/actium-user-account-backend:${{ github.sha }}
+            ${{ steps.creds.outputs.namespace }}/actium-user-account-backend:${{ github.sha }}
 
       - name: Push ai-backend image
         if: steps.creds.outputs.available == 'true'
@@ -175,7 +177,7 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: |
-            ${{ env.REGISTRY_NAMESPACE }}/actium-ai-backend:${{ github.sha }}
+            ${{ steps.creds.outputs.namespace }}/actium-ai-backend:${{ github.sha }}
 
       - name: Push frontend image
         if: steps.creds.outputs.available == 'true'
@@ -187,4 +189,5 @@ jobs:
           build-args: |
             VITE_API_BASE_URL=http://localhost:8001
           tags: |
-            ${{ env.REGISTRY_NAMESPACE }}/actium-templater-frontend:${{ github.sha }}
+            ${{ steps.creds.outputs.namespace }}/actium-templater-frontend:${{ github.sha }}
+

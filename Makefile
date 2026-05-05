@@ -3,15 +3,16 @@ FRONTEND_DIR = templater
 K8S_DIR      = k8s
 CONFIG_FILE  = .env.local
 IMAGE_TAG    = v1.0.2
+REGISTRY_NAMESPACE ?= tsermakov
 
 K8S_BACKEND_NS    = actium-backend
 K8S_FRONTEND_NS   = actium-frontend
 K8S_MONITORING_NS = actium-monitoring
 K8S_DATABASE_NS   = actium-database
 
-BACKEND_IMG  = mgfallen/actium-user-account-backend:$(IMAGE_TAG)
-AI_IMG       = mgfallen/actium-ai-backend:$(IMAGE_TAG)
-FRONTEND_IMG = mgfallen/actium-templater-frontend:$(IMAGE_TAG)
+BACKEND_IMG  = $(REGISTRY_NAMESPACE)/actium-user-account-backend:$(IMAGE_TAG)
+AI_IMG       = $(REGISTRY_NAMESPACE)/actium-ai-backend:$(IMAGE_TAG)
+FRONTEND_IMG = $(REGISTRY_NAMESPACE)/actium-templater-frontend:$(IMAGE_TAG)
 
 YELLOW = \033[0;33m
 NC     = \033[0m
@@ -88,7 +89,7 @@ deploy:
 	kubectl apply -f $(K8S_DIR)/grafana.yaml
 	kubectl apply -f $(K8S_DIR)/ingress-backend.yaml
 	kubectl apply -f $(K8S_DIR)/ingress-grafana.yaml
-	kubectl apply -f $(K8S_DIR)/ingress.yaml
+	kubectl apply -f $(K8S_DIR)/ingress-frontend.yaml
 	kubectl -n $(K8S_BACKEND_NS) set image deployment/user-account-backend backend=$(BACKEND_IMG)
 	kubectl -n $(K8S_BACKEND_NS) set image deployment/ai-backend ai-api=$(AI_IMG)
 	kubectl -n $(K8S_FRONTEND_NS) set image deployment/frontend web=$(FRONTEND_IMG)
@@ -120,7 +121,7 @@ logs-back:
 	kubectl -n $(K8S_BACKEND_NS) logs -l app=user-account-backend -f
 
 clean:
-	-kubectl delete -f $(K8S_DIR)/ingress.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/ingress-frontend.yaml --ignore-not-found
 	-kubectl delete -f $(K8S_DIR)/ingress-grafana.yaml --ignore-not-found
 	-kubectl delete -f $(K8S_DIR)/ingress-backend.yaml --ignore-not-found
 	-kubectl -n $(K8S_FRONTEND_NS) delete ingress actium-ingress --ignore-not-found
