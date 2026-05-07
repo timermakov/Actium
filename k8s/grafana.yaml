@@ -48,7 +48,7 @@ spec:
       serviceAccountName: grafana
       containers:
         - name: grafana
-          image: grafana/grafana:latest
+          image: grafana/grafana-enterprise:latest
           env:
             - name: GF_SECURITY_ADMIN_PASSWORD
               value: "admin"
@@ -56,6 +56,16 @@ spec:
               value: "%(protocol)s://%(domain)s/grafana/"
             - name: GF_SERVER_SERVE_FROM_SUB_PATH
               value: "true"
+            - name: GF_INSTALL_PLUGINS
+              value: grafana-assistant-app
+            - name: GF_RBAC_ENABLED
+              value: "true"
+            - name: GF_PLUGINS_PLUGIN_GRAFANA_ASSISTANT_APP_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "false"
+            - name: GF_SECURITY_ADMIN_USER
+              value: "admin"
           volumeMounts:
             - name: sc-dashboard-volume
               mountPath: /tmp/dashboards
@@ -92,6 +102,8 @@ spec:
                 path: datasources/datasource.yaml
               - key: provider.yaml
                 path: dashboards/provider.yaml
+              - key: access-control.yaml
+                path: access-control/access-control.yaml
 ---
 apiVersion: v1
 kind: Service

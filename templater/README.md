@@ -98,6 +98,49 @@ npm run build
 npm run preview
 ```
 
+### Kubernetes:
+
+Quick sanity check before deploy (any machine)
+```
+kubectl config current-context
+kubectl cluster-info
+minikube status
+make status
+```
+
+server
+```
+ssh tsermakov@178.154.244.207
+cd ~/Actium
+make deploy-local
+make migrate
+```
+
+local cluster
+```
+minikube start --driver=docker --wait=all
+minikube addons enable metrics-server
+minikube addons enable ingress
+kubectl cluster-info
+make deploy-local
+
+```
+
+in separate terminal:
+```
+minikube tunnel
+```
+
+## Main pages
+
+```
+Frontend -  http://localhost:8080/
+Backend Swagger - http://localhost:8080/docs
+Backend (users) - http://localhost:8080/api/user/health
+Backend (AI) - http://localhost:8080/api/ai/health
+Grafana - http://localhost:8080/grafana/
+```
+
 ## AI Backend (optional, v0.1.1)
 
 Backend runs locally to keep credentials off the client.

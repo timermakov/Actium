@@ -27,3 +27,10 @@ data:
         editable: true
         options:
           path: /tmp/dashboards
+  access-control.yaml: |-
+    apiVersion: 2
+    assignments:
+      - builtinRole: Admin
+        permission: grafana-assistant-app.tokens:access
+      - builtinRole: Editor
+        permission: grafana-assistant-app.tokens:access
