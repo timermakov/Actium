@@ -86,6 +86,7 @@ deploy:
 	kubectl apply -f $(K8S_DIR)/grafana-dashboard-ai-backend.yaml
 	kubectl apply -f $(K8S_DIR)/grafana-dashboard-frontend.yaml
 	kubectl apply -f $(K8S_DIR)/grafana-dashboard-k8s-pods.yaml
+	kubectl apply -f $(K8S_DIR)/grafana-dashboard-api-overview.yaml
 	kubectl apply -f $(K8S_DIR)/grafana.yaml
 	kubectl apply -f $(K8S_DIR)/ingress-backend.yaml
 	kubectl apply -f $(K8S_DIR)/ingress-grafana.yaml
@@ -127,6 +128,7 @@ clean:
 	-kubectl -n $(K8S_FRONTEND_NS) delete ingress actium-ingress --ignore-not-found
 	-kubectl delete -f $(K8S_DIR)/grafana.yaml --ignore-not-found
 	-kubectl delete -f $(K8S_DIR)/grafana-dashboard-k8s-pods.yaml --ignore-not-found
+	-kubectl delete -f $(K8S_DIR)/grafana-dashboard-api-overview.yaml --ignore-not-found
 	-kubectl delete -f $(K8S_DIR)/grafana-dashboard-frontend.yaml --ignore-not-found
 	-kubectl delete -f $(K8S_DIR)/grafana-dashboard-ai-backend.yaml --ignore-not-found
 	-kubectl delete -f $(K8S_DIR)/grafana-dashboard-user-backend.yaml --ignore-not-found

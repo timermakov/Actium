@@ -30,7 +30,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus" },
-              "expr": "sum(rate(http_requests_total{namespace=~\"$namespace\", pod=~\"$pod\", path=~\"/ai/.*\"}[5m])) by (path, method)",
+              "expr": "sum(rate(http_requests_total{pod=~\"$pod\", path=~\"/ai/.*\"}[5m])) by (path, method)",
               "legendFormat": "{{method}} {{path}}",
               "refId": "A"
             }
@@ -50,7 +50,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus" },
-              "expr": "sum(rate(http_requests_total{namespace=~\"$namespace\", pod=~\"$pod\", status=~\"4..|5..\"}[5m])) by (status, path)",
+              "expr": "sum(rate(http_requests_total{pod=~\"$pod\", status=~\"4..|5..\"}[5m])) by (status, path)",
               "legendFormat": "{{status}} {{path}}",
               "refId": "A"
             }
@@ -70,7 +70,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus" },
-              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\", pod=~\"$pod\", path=~\"/ai/.*\"}[5m])) by (le, path))",
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{pod=~\"$pod\", path=~\"/ai/.*\"}[5m])) by (le, path))",
               "legendFormat": "P95 {{path}}",
               "refId": "A"
             }
@@ -90,7 +90,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus" },
-              "expr": "histogram_quantile(0.95, sum(rate(ai_request_duration_seconds_bucket{namespace=~\"$namespace\"}[5m])) by (le, endpoint))",
+              "expr": "histogram_quantile(0.95, sum(rate(ai_request_duration_seconds_bucket{pod=~\"$pod\"}[5m])) by (le, endpoint))",
               "legendFormat": "P95 {{endpoint}}",
               "refId": "A"
             }
@@ -204,7 +204,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus" },
-              "expr": "sum(rate(ai_requests_total{namespace=~\"$namespace\", status=\"2xx\"}[5m])) / sum(rate(ai_requests_total{namespace=~\"$namespace\"}[5m])) * 100",
+              "expr": "sum(rate(ai_requests_total{pod=~\"$pod\", status=\"2xx\"}[5m])) / sum(rate(ai_requests_total{pod=~\"$pod\"}[5m])) * 100",
               "legendFormat": "Success %",
               "refId": "A"
             }
@@ -239,9 +239,9 @@ data:
           {
             "name": "pod",
             "type": "query",
-            "query": "label_values(kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"ai-backend.*\"}, pod)",
+            "query": "label_values(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"ai-backend.*\", phase=\"Running\"}, pod)",
             "multi": true,
-            "includeAll": true,
+            "includeAll": false,
             "allValue": ".*",
             "label": "Pod",
             "refresh": 1,

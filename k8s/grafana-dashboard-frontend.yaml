@@ -201,9 +201,9 @@ data:
           {
             "name": "pod",
             "type": "query",
-            "query": "label_values(kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"frontend.*\"}, pod)",
+            "query": "label_values(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"frontend.*\", phase=\"Running\"}, pod)",
             "multi": true,
-            "includeAll": true,
+            "includeAll": false,
             "allValue": ".*",
             "label": "Pod",
             "refresh": 1,
