@@ -1,0 +1,190 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-api-overview
+  namespace: actium-monitoring
+  labels:
+    grafana_dashboard: "1"
+    app: grafana
+    component: monitoring
+data:
+  api-overview.json: |-
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "title": "API Endpoints Overview",
+          "type": "row"
+        },
+        {
+          "title": "Requests Count by Endpoint",
+          "type": "timeseries",
+          "gridPos": { "h": 9, "w": 16, "x": 0, "y": 1 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "sum(increase(http_requests_total{namespace=~\"$namespace\", pod=~\"$pod\"}[$__rate_interval])) by (path)",
+              "legendFormat": "{{path}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"] }
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "short", "min": 0 },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Top Endpoints (Requests per Interval)",
+          "type": "table",
+          "gridPos": { "h": 9, "w": 8, "x": 16, "y": 1 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "topk(10, sum(increase(http_requests_total{namespace=~\"$namespace\", pod=~\"$pod\"}[$__rate_interval])) by (path))",
+              "format": "table",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "instance": true,
+                  "job": true,
+                  "namespace": true,
+                  "pod": true
+                },
+                "renameByName": {
+                  "path": "Endpoint",
+                  "Value": "Requests"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "title": "Requests Count by Method and Endpoint",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 10 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "sum(increase(http_requests_total{namespace=~\"$namespace\", pod=~\"$pod\"}[$__rate_interval])) by (method, path)",
+              "legendFormat": "{{method}} {{path}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"] }
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "short", "min": 0 },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Requests by Pod and Endpoint",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 14, "x": 0, "y": 18 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "sum(increase(http_requests_total{namespace=~\"$namespace\", pod=~\"$pod\"}[$__rate_interval])) by (pod, path)",
+              "legendFormat": "{{pod}} | {{path}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"] }
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "short", "min": 0 },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Pod Endpoint Activity (Table)",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 10, "x": 14, "y": 18 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "topk(50, sum(increase(http_requests_total{namespace=~\"$namespace\", pod=~\"$pod\"}[$__rate_interval])) by (pod, method, path, status))",
+              "format": "table",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "instance": true,
+                  "job": true,
+                  "namespace": true
+                },
+                "renameByName": {
+                  "pod": "Pod",
+                  "method": "Method",
+                  "path": "Endpoint",
+                  "status": "Status",
+                  "Value": "Requests"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 36,
+      "style": "dark",
+      "tags": ["api", "requests", "actium"],
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "query": "label_values(http_requests_total, namespace)",
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".*",
+            "label": "Namespace",
+            "refresh": 1,
+            "datasource": { "type": "prometheus" },
+            "current": { "text": ["All"], "value": ["$__all"] }
+          },
+          {
+            "name": "pod",
+            "type": "query",
+            "query": "label_values(kube_pod_status_phase{namespace=~\"$namespace\", phase=\"Running\", pod=~\"(user-account-backend|ai-backend).*\"}, pod)",
+            "multi": true,
+            "includeAll": false,
+            "label": "Pod",
+            "refresh": 1,
+            "datasource": { "type": "prometheus" },
+            "current": { "text": [], "value": [] }
+          }
+        ]
+      },
+      "time": { "from": "now-1h", "to": "now" },
+      "title": "Actium: API Endpoints Requests",
+      "uid": "api-overview-001",
+      "version": 2
+    }

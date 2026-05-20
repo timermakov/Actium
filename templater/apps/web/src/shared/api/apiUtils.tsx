@@ -1,4 +1,6 @@
-export const API_URL = import.meta.env.VITE_AUTH_API_URL || 'http://localhost:8080';
+export const API_URL = '/api/user';
+
+console.log("!!! API_URL CHECK:", API_URL);
 
 /**
  * Универсальный обработчик ответов от сервера

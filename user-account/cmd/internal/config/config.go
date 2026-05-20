@@ -9,8 +9,8 @@ import (
 
 // Config - модель конфига
 type Config struct {
-	AppHost            string
-	AppPort            string
+	BackendHost        string
+	BackendPort        string
 	DBHost             string
 	DBPort             string
 	DBUser             string
@@ -21,18 +21,19 @@ type Config struct {
 	CORSAllowedOrigins []string
 }
 
-// Load - прочитать из файла конфигурации
+// Load - прочитать из окружения
 func Load() *Config {
 	cfg := &Config{
-		AppHost:            getEnv("APP_HOST"),
-		AppPort:            getEnv("APP_PORT"),
-		DBHost:             getEnv("DB_HOST"),
-		DBPort:             getEnv("DB_PORT"),
+		// Теперь ищем BACKEND_HOST и BACKEND_PORT, как в твоем .env.local
+		BackendHost:        getEnvWithDefault("BACKEND_HOST", "0.0.0.0"),
+		BackendPort:        getEnvWithDefault("BACKEND_PORT", "8080"),
+		DBHost:             getEnvWithDefault("DB_HOST", "postgres"),
+		DBPort:             getEnvWithDefault("DB_PORT", "5432"),
 		DBUser:             getEnv("DB_USER"),
 		DBPassword:         getEnv("DB_PASSWORD"),
 		DBName:             getEnv("DB_NAME"),
 		JWTSecret:          getEnv("JWT_SECRET"),
-		CORSAllowedOrigins: parseCommaSeparatedList(getEnv("CORS_ALLOWED_ORIGINS")),
+		CORSAllowedOrigins: parseCommaSeparatedList(getEnvWithDefault("CORS_ALLOWED_ORIGINS", "*")),
 	}
 
 	if errs := cfg.Validate(); len(errs) > 0 {
@@ -54,18 +55,6 @@ func Load() *Config {
 func (c *Config) Validate() []error {
 	var errs []error
 
-	if c.AppHost == "" {
-		errs = append(errs, fmt.Errorf("APP_HOST is required"))
-	}
-	if c.AppPort == "" {
-		errs = append(errs, fmt.Errorf("APP_PORT is required"))
-	}
-	if c.DBHost == "" {
-		errs = append(errs, fmt.Errorf("DB_HOST is required"))
-	}
-	if c.DBPort == "" {
-		errs = append(errs, fmt.Errorf("DB_PORT is required"))
-	}
 	if c.DBUser == "" {
 		errs = append(errs, fmt.Errorf("DB_USER is required"))
 	}
@@ -78,20 +67,13 @@ func (c *Config) Validate() []error {
 	if c.JWTSecret == "" {
 		errs = append(errs, fmt.Errorf("JWT_SECRET is required"))
 	}
-	if len(c.CORSAllowedOrigins) == 0 {
-		errs = append(errs, fmt.Errorf("CORS_ALLOWED_ORIGINS is required (comma-separated, e.g. http://localhost:5173)"))
-	}
 
-	if c.AppPort != "" {
-		if _, err := strconv.Atoi(c.AppPort); err != nil {
-			errs = append(errs, fmt.Errorf("APP_PORT must be a number"))
-		}
+	// Валидация форматов чисел
+	if _, err := strconv.Atoi(c.BackendPort); err != nil {
+		errs = append(errs, fmt.Errorf("BACKEND_PORT must be a number (got: %s)", c.BackendPort))
 	}
-
-	if c.DBPort != "" {
-		if _, err := strconv.Atoi(c.DBPort); err != nil {
-			errs = append(errs, fmt.Errorf("DB_PORT must be a number"))
-		}
+	if _, err := strconv.Atoi(c.DBPort); err != nil {
+		errs = append(errs, fmt.Errorf("DB_PORT must be a number (got: %s)", c.DBPort))
 	}
 
 	return errs
@@ -99,6 +81,13 @@ func (c *Config) Validate() []error {
 
 func getEnv(key string) string {
 	return strings.TrimSpace(os.Getenv(key))
+}
+
+func getEnvWithDefault(key, fallback string) string {
+	if value := getEnv(key); value != "" {
+		return value
+	}
+	return fallback
 }
 
 func parseCommaSeparatedList(s string) []string {
