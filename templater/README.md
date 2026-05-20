@@ -113,7 +113,8 @@ server
 ssh tsermakov@178.154.244.207
 cd ~/Actium
 make deploy-local
-make migrate
+```
+(Migrations run automatically via `make deploy` / init container.)
 ```
 
 local cluster
