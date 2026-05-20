@@ -3,7 +3,7 @@ kind: Kustomization
 
 resources:
   - namespaces.yaml
-  - secrets.yaml
+  - backend-secret.yaml
   - network-policies.yaml
   - user-backend.yaml
   - ai-backend.yaml
