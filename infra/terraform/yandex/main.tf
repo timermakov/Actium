@@ -1,3 +1,35 @@
+resource "yandex_vpc_security_group" "vm_sg" {
+  name       = "${var.vm_name}-sg"
+  network_id = var.network_id
+
+  ingress {
+    protocol       = "TCP"
+    description    = "SSH"
+    port           = 22
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "HTTP"
+    port           = 80
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "HTTPS"
+    port           = 443
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    protocol       = "ANY"
+    description    = "All outbound"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 resource "yandex_compute_instance" "vm" {
   name        = var.vm_name
   platform_id = "standard-v3"
@@ -17,8 +49,9 @@ resource "yandex_compute_instance" "vm" {
   }
 
   network_interface {
-    subnet_id = var.subnet_id
-    nat       = true
+    subnet_id          = var.subnet_id
+    nat                = true
+    security_group_ids = [yandex_vpc_security_group.vm_sg.id]
   }
 
   metadata = {

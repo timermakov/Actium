@@ -5,10 +5,14 @@ on:
     paths:
       - "infra/**"
       - ".github/workflows/infra.yml"
+      - ".github/workflows/cd.yml"
+      - ".github/workflows/notify.yml"
   pull_request:
     paths:
       - "infra/**"
       - ".github/workflows/infra.yml"
+      - ".github/workflows/cd.yml"
+      - ".github/workflows/notify.yml"
         
 jobs:
   terraform-validate:

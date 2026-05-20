@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+images:
+  - name: tsermakov/actium-user-account-backend
+    newName: tsermakov/actium-user-account-backend
+    newTag: v1.0.2
+  - name: tsermakov/actium-ai-backend
+    newName: tsermakov/actium-ai-backend
+    newTag: v1.0.2
+  - name: tsermakov/actium-templater-frontend
+    newName: tsermakov/actium-templater-frontend
+    newTag: v1.0.2

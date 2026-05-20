@@ -1,0 +1,278 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-k8s-pods
+  namespace: actium-monitoring
+  labels:
+    grafana_dashboard: "1"
+    app: grafana
+data:
+  k8s-pods.json: |-
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "title": "Pod Resources by Namespace",
+          "type": "row"
+        },
+        {
+          "type": "timeseries",
+          "title": "CPU Usage by Pod (from resource requests)",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "sum(kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$pod\", resource=\"cpu\"}) by (pod, namespace)",
+              "legendFormat": "{{namespace}}/{{pod}} - request",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "short", "min": 0 },
+            "overrides": []
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Memory Usage by Pod (from resource requests)",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "sum(kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$pod\", resource=\"memory\"}) by (pod, namespace) / 1024 / 1024",
+              "legendFormat": "{{namespace}}/{{pod}} - request (MiB)",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "mebibytes", "min": 0 },
+            "overrides": []
+          }
+        },
+        {
+          "type": "table",
+          "title": "Pod Resource Details",
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 9 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$pod\"}",
+              "format": "table",
+              "instant": true,
+              "refId": "A"
+            },
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "kube_pod_container_resource_limits{namespace=~\"$namespace\", pod=~\"$pod\"}",
+              "format": "table",
+              "instant": true,
+              "refId": "B"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "endpoint": true,
+                  "job": true,
+                  "service": true,
+                  "uid": true
+                },
+                "renameByName": {
+                  "namespace": "Namespace",
+                  "pod": "Pod",
+                  "container": "Container",
+                  "resource": "Resource",
+                  "Value #A": "Request",
+                  "Value #B": "Limit"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 19 },
+          "title": "Pod Status Overview",
+          "type": "row"
+        },
+        {
+          "type": "stat",
+          "title": "Running Pods",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 20 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "sum(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$pod\", phase=\"Running\"})",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value"
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "none" },
+            "overrides": []
+          }
+        },
+        {
+          "type": "stat",
+          "title": "Pending Pods",
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 20 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "sum(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$pod\", phase=~\"Pending|Unknown\"})",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value"
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "none" },
+            "overrides": []
+          }
+        },
+        {
+          "type": "stat",
+          "title": "Failed Pods",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 20 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "sum(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$pod\", phase=~\"Failed|Succeeded\"})",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value"
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "none" },
+            "overrides": []
+          }
+        },
+        {
+          "type": "stat",
+          "title": "Total Restarts",
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 20 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "sum(kube_pod_container_status_restarts_total{namespace=~\"$namespace\", pod=~\"$pod\"})",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value"
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "none" },
+            "overrides": []
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Pod Status Timeline",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$pod\"}",
+              "legendFormat": "{{namespace}}/{{pod}} - {{phase}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "none" },
+            "overrides": []
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Container Restarts",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus" },
+              "expr": "kube_pod_container_status_restarts_total{namespace=~\"$namespace\", pod=~\"$pod\"}",
+              "legendFormat": "{{namespace}}/{{pod}}/{{container}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "none" },
+            "overrides": []
+          }
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 36,
+      "style": "dark",
+      "tags": ["kubernetes", "pods", "actium", "resources"],
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "query": "label_values(kube_pod_container_resource_requests, namespace)",
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".*",
+            "label": "Namespace",
+            "refresh": 1,
+            "datasource": { "type": "prometheus" },
+            "current": { "text": ["All"], "value": ["$__all"] },
+            "hide": 0
+          },
+          {
+            "name": "pod",
+            "type": "query",
+            "query": "label_values(kube_pod_status_phase{namespace=~\"$namespace\", phase=\"Running\"}, pod)",
+            "multi": true,
+            "includeAll": false,
+            "allValue": ".*",
+            "label": "Pod",
+            "refresh": 1,
+            "datasource": { "type": "prometheus" },
+            "current": { "text": ["All"], "value": ["$__all"] },
+            "hide": 0
+          }
+        ]
+      },
+      "time": { "from": "now-1h", "to": "now" },
+      "title": "Actium: Pod Resources & Status",
+      "uid": "k8s-pods-001",
+      "version": 1
+    }
