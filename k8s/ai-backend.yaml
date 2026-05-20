@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: ai-api
-          image: mgfallen/actium-ai-backend:latest
+          image: tsermakov/actium-ai-backend:v1.0.2
           imagePullPolicy: IfNotPresent
           resources:
             requests:

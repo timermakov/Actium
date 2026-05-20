@@ -21,10 +21,45 @@ spec:
         prometheus.io/path: "/metrics"
         prometheus.io/port: "8080"
     spec:
+      initContainers:
+        - name: db-migrate
+          image: tsermakov/actium-user-account-backend:v1.0.2
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              DSN="host=${DB_HOST} port=${DB_PORT} user=${DB_USER} password=${DB_PASSWORD} dbname=${DB_NAME} sslmode=disable"
+              i=1
+              while [ "$i" -le 30 ]; do
+                if /app/goose -dir /app/migrations postgres "$DSN" up; then
+                  exit 0
+                fi
+                echo "Migration attempt $i failed, retrying..."
+                sleep 2
+                i=$((i + 1))
+              done
+              exit 1
+          envFrom:
+            - configMapRef:
+                name: backend-config
+                optional: true
+          env:
+            - name: DB_HOST
+              value: "host.minikube.internal"
+            - name: DB_PORT
+              value: "5432"
       containers:
         - name: backend
-          image: mgfallen/actium-user-account-backend:latest
+          image: tsermakov/actium-user-account-backend:v1.0.2
           imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
           resources:
             requests:
               cpu: "100m"
@@ -38,7 +73,7 @@ spec:
                 optional: true
           env:
             - name: DB_HOST
-              value: "db.actium-database.svc.cluster.local"
+              value: "host.minikube.internal"
             - name: DB_PORT
               value: "5432"
             - name: APP_HOST

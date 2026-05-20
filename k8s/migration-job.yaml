@@ -3,30 +3,42 @@ kind: Job
 metadata:
   name: user-account-db-migrate
   namespace: actium-backend
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
-  # Джоб удалится через 100 секунд после успеха, чтобы не мусорить
   ttlSecondsAfterFinished: 100
   template:
     spec:
       securityContext:
-        runAsUser: 0
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - name: migrate
-          image: mgfallen/actium-user-account-backend:v1.0.2
+          image: tsermakov/actium-user-account-backend:v1.0.2
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-c"]
           args:
             - |
-              echo "--- Checking environment ---"
-              ls -l /app && ls -l /app/migrations
-              echo "--- Running migrations ---"
-              /app/goose -dir /app/migrations postgres "host=$(DB_HOST) port=$(DB_PORT) user=$(DB_USER) password=$(DB_PASSWORD) dbname=$(DB_NAME) sslmode=disable" up
+              DSN="host=${DB_HOST} port=${DB_PORT} user=${DB_USER} password=${DB_PASSWORD} dbname=${DB_NAME} sslmode=disable"
+              i=1
+              while [ "$i" -le 30 ]; do
+                if /app/goose -dir /app/migrations postgres "$DSN" up; then
+                  exit 0
+                fi
+                echo "Migration attempt $i failed, retrying..."
+                sleep 2
+                i=$((i + 1))
+              done
+              exit 1
           envFrom:
             - configMapRef:
                 name: backend-config
           env:
             - name: DB_HOST
-              value: "db.actium-database.svc.cluster.local"
+              value: "host.minikube.internal"
             - name: DB_PORT
               value: "5432"
       restartPolicy: OnFailure
