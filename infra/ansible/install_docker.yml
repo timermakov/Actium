@@ -51,3 +51,18 @@
         name: "{{ ansible_user }}"
         groups: docker
         append: yes
+
+    - name: Ensure host database env file exists
+      copy:
+        src: "{{ playbook_dir }}/../database/.env.db.example"
+        dest: "{{ playbook_dir }}/../database/.env.db"
+        force: false
+        mode: "0600"
+
+    - name: Start PostgreSQL on host
+      community.docker.docker_compose_v2:
+        project_src: "{{ playbook_dir }}/../database"
+        env_files:
+          - .env.db
+        state: present
+      become: false

@@ -1,3 +1,5 @@
+# DEPRECATED: PostgreSQL runs on VM host via infra/database/docker-compose.yaml
+# Do not apply this file in make deploy.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

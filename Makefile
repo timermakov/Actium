@@ -17,7 +17,7 @@ FRONTEND_IMG = $(REGISTRY_NAMESPACE)/actium-templater-frontend:$(IMAGE_TAG)
 YELLOW = \033[0;33m
 NC     = \033[0m
 
-.PHONY: run stop clean build-all push-cloud push-local start-cluster deploy deploy-local migrate status restart logs-back reset-db
+.PHONY: run stop clean build-all push-cloud push-local start-cluster db-host-up deploy deploy-local migrate status restart logs-back reset-db
 
 run:
 	cd $(BACKEND_DIR) && docker compose --env-file .env.local up -d --build
@@ -69,12 +69,15 @@ start-cluster:
 	minikube addons enable metrics-server
 	minikube addons enable ingress
 
-deploy:
+db-host-up:
+	@echo "$(YELLOW)--- Starting host PostgreSQL ---$(NC)"
+	@if [ ! -f infra/database/.env.db ]; then cp infra/database/.env.db.example infra/database/.env.db; fi
+	cd infra/database && docker compose --env-file .env.db up -d
+
+deploy: db-host-up
 	@echo "$(YELLOW)--- Deploying to K8s ---$(NC)"
 	kubectl apply -f $(K8S_DIR)/namespaces.yaml
 	kubectl create configmap backend-config -n $(K8S_BACKEND_NS) --from-env-file=$(CONFIG_FILE) --dry-run=client -o yaml | kubectl apply -f -
-	kubectl create configmap backend-config -n $(K8S_DATABASE_NS) --from-env-file=$(CONFIG_FILE) --dry-run=client -o yaml | kubectl apply -f -
-	kubectl apply -f $(K8S_DIR)/postgres.yaml
 	kubectl apply -f $(K8S_DIR)/user-backend.yaml
 	kubectl apply -f $(K8S_DIR)/ai-backend.yaml
 	kubectl apply -f $(K8S_DIR)/frontend.yaml
@@ -90,10 +93,10 @@ deploy:
 	kubectl apply -f $(K8S_DIR)/ingress-backend.yaml
 	kubectl apply -f $(K8S_DIR)/ingress-grafana.yaml
 	kubectl apply -f $(K8S_DIR)/ingress-frontend.yaml
-	kubectl -n $(K8S_BACKEND_NS) set image deployment/user-account-backend backend=$(BACKEND_IMG)
+	kubectl -n $(K8S_BACKEND_NS) set image deployment/user-account-backend backend=$(BACKEND_IMG) db-migrate=$(BACKEND_IMG)
 	kubectl -n $(K8S_BACKEND_NS) set image deployment/ai-backend ai-api=$(AI_IMG)
 	kubectl -n $(K8S_FRONTEND_NS) set image deployment/frontend web=$(FRONTEND_IMG)
-	kubectl -n $(K8S_DATABASE_NS) rollout status deployment/db --timeout=180s
+	$(MAKE) migrate
 	kubectl -n $(K8S_BACKEND_NS) rollout status deployment/user-account-backend --timeout=180s
 	kubectl -n $(K8S_BACKEND_NS) rollout status deployment/ai-backend --timeout=180s
 	kubectl -n $(K8S_FRONTEND_NS) rollout status deployment/frontend --timeout=180s
@@ -137,7 +140,5 @@ clean:
 	-kubectl delete -f $(K8S_DIR)/frontend.yaml --ignore-not-found
 	-kubectl delete -f $(K8S_DIR)/ai-backend.yaml --ignore-not-found
 	-kubectl delete -f $(K8S_DIR)/user-backend.yaml --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/postgres.yaml --ignore-not-found
 	-kubectl delete -f $(K8S_DIR)/migration-job.yaml --ignore-not-found
 	-kubectl -n $(K8S_BACKEND_NS) delete configmap backend-config --ignore-not-found
-	-kubectl -n $(K8S_DATABASE_NS) delete configmap backend-config --ignore-not-found

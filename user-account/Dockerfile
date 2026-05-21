@@ -25,8 +25,9 @@ COPY --from=builder /etc/group /etc/group
 COPY --from=builder /app-bin .
 COPY --from=builder /build/bin/goose /app/goose
 COPY --from=builder /build/migrations ./migrations
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 
-RUN chown -R appuser:appgroup /app && chmod +x /app/goose
+RUN chown -R appuser:appgroup /app && chmod +x /app/goose /app/docker-entrypoint.sh
 
 USER appuser
-CMD ["./app-bin"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
