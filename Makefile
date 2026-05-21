@@ -17,7 +17,7 @@ FRONTEND_IMG = $(REGISTRY_NAMESPACE)/actium-templater-frontend:$(IMAGE_TAG)
 YELLOW = \033[0;33m
 NC     = \033[0m
 
-.PHONY: run stop clean build-all push-cloud push-local start-cluster db-host-up deploy deploy-local migrate status restart logs-back reset-db
+.PHONY: run stop clean build-all push-cloud push-local start-cluster db-host-up deploy deploy-local migrate status restart logs-back reset-db reset-k8s-workloads
 
 run:
 	cd $(BACKEND_DIR) && docker compose --env-file .env.local up -d --build
@@ -69,8 +69,19 @@ start-cluster:
 
 db-host-up:
 	@echo "$(YELLOW)--- Starting host PostgreSQL ---$(NC)"
-	@if [ ! -f infra/database/.env.db ]; then cp infra/database/.env.db.example infra/database/.env.db; fi
+ifdef OS
+	@if not exist infra\database\.env.db copy /Y infra\database\.env.db.example infra\database\.env.db
+else
+	@test -f infra/database/.env.db || cp infra/database/.env.db.example infra/database/.env.db
+endif
 	cd infra/database && docker compose --env-file .env.db up -d
+
+reset-k8s-workloads:
+	@echo "$(YELLOW)--- Deleting workloads (immutable selector recovery) ---$(NC)"
+	-kubectl -n $(K8S_BACKEND_NS) delete deployment user-account-backend ai-backend --ignore-not-found
+	-kubectl -n $(K8S_FRONTEND_NS) delete deployment frontend --ignore-not-found
+	-kubectl -n $(K8S_MONITORING_NS) delete deployment prometheus grafana kube-state-metrics --ignore-not-found
+	-kubectl -n $(K8S_MONITORING_NS) delete daemonset node-exporter --ignore-not-found
 
 deploy: db-host-up
 	@echo "$(YELLOW)--- Deploying to K8s (kustomize) ---$(NC)"

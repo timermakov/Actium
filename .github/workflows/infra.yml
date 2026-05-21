@@ -13,7 +13,7 @@ on:
       - ".github/workflows/infra.yml"
       - ".github/workflows/cd.yml"
       - ".github/workflows/notify.yml"
-        
+
 jobs:
   terraform-validate:
     name: Terraform validate (Yandex)

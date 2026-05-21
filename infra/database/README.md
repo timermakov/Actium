@@ -2,15 +2,18 @@
 
 Database runs in Docker on the VM host so data survives cluster redeploys and Argo CD prune.
 
-## One-time setup on VM
+## One-time setup (VM or Windows)
 
 ```bash
-cd ~/Actium/infra/database
-cp .env.db.example .env.db
+# from repository root (not ~/)
+cd infra/database
+cp .env.db.example .env.db   # Windows: copy .env.db.example .env.db
 # edit .env.db with strong passwords
 docker compose --env-file .env.db up -d
-docker compose ps
+docker compose --env-file .env.db ps
 ```
+
+Always pass `--env-file .env.db` for `ps` / `logs` — otherwise compose warns about empty `DB_*` variables.
 
 ## Minikube connection
 
