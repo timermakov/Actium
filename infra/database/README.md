@@ -28,5 +28,5 @@ minikube ssh -- grep host.minikube.internal /etc/hosts
 
 ## Do not
 
-- Apply `k8s/postgres.yaml` (deprecated in-cluster DB).
+- Run PostgreSQL inside the cluster (use host Docker above only).
 - Expose port 5432 in Terraform security group to the public internet.
