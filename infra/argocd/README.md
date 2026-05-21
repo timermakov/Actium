@@ -55,4 +55,4 @@ After merge to master — use `actium-app.yaml` with `targetRevision: master` an
 2. CD workflow commits new tags to `infra/k8s/overlays/production/kustomization.yaml`.
 3. Argo CD detects drift and syncs the cluster.
 
-PostgreSQL is **not** managed by Argo CD by architecture design — see [`../database/README.md`](../database/README.md).
+PostgreSQL (StatefulSet в `actium-database`, sync-wave `-1`) синхронизируется вместе с приложением. Host DB — опционально: [`../database/README.md`](../database/README.md).

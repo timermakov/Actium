@@ -37,10 +37,6 @@ spec:
             - configMapRef:
                 name: backend-config
           env:
-            - name: DB_HOST
-              value: "host.minikube.internal"
-            - name: DB_PORT
-              value: "5432"
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:

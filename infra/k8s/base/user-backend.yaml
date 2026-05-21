@@ -48,10 +48,6 @@ spec:
                 name: backend-config
                 optional: true
           env:
-            - name: DB_HOST
-              value: "host.minikube.internal"
-            - name: DB_PORT
-              value: "5432"
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -82,10 +78,6 @@ spec:
                 name: backend-config
                 optional: true
           env:
-            - name: DB_HOST
-              value: "host.minikube.internal"
-            - name: DB_PORT
-              value: "5432"
             - name: APP_HOST
               value: "0.0.0.0"
             - name: APP_PORT

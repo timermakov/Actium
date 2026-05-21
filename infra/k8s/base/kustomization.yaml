@@ -3,6 +3,9 @@ kind: Kustomization
 
 resources:
   - namespaces.yaml
+  - postgres-credentials.yaml
+  - postgres.yaml
+  - postgres-network-policy.yaml
   - backend-secret.yaml
   - network-policies.yaml
   - user-backend.yaml

@@ -17,7 +17,7 @@ FRONTEND_IMG = $(REGISTRY_NAMESPACE)/actium-templater-frontend:$(IMAGE_TAG)
 YELLOW = \033[0;33m
 NC     = \033[0m
 
-.PHONY: run stop clean build-all push-cloud push-local start-cluster db-host-up deploy deploy-local migrate status restart logs-back reset-db reset-k8s-workloads
+.PHONY: run stop clean build-all push-cloud push-local start-cluster db-host-up deploy deploy-local migrate status restart logs-back reset-db reset-k8s-workloads reset-k8s-postgres reset-k8s-postgres-data
 
 run:
 	cd $(BACKEND_DIR) && docker compose --env-file .env.local up -d --build
@@ -83,11 +83,14 @@ reset-k8s-workloads:
 	-kubectl -n $(K8S_MONITORING_NS) delete deployment prometheus grafana kube-state-metrics --ignore-not-found
 	-kubectl -n $(K8S_MONITORING_NS) delete daemonset node-exporter --ignore-not-found
 
-deploy: db-host-up
+deploy:
 	@echo "$(YELLOW)--- Deploying to K8s (kustomize) ---$(NC)"
 	kubectl apply -k $(K8S_OVERLAY)
 	kubectl create configmap backend-config -n $(K8S_BACKEND_NS) --from-env-file=$(CONFIG_FILE) --dry-run=client -o yaml | kubectl apply -f -
 	kubectl create secret generic backend-secrets -n $(K8S_BACKEND_NS) --from-env-file=$(CONFIG_FILE) --dry-run=client -o yaml | kubectl apply -f -
+	kubectl create secret generic postgres-credentials -n actium-database --from-env-file=$(CONFIG_FILE) --dry-run=client -o yaml | kubectl apply -f -
+	@echo "$(YELLOW)--- Waiting for PostgreSQL ---$(NC)"
+	kubectl -n actium-database rollout status statefulset/postgres --timeout=180s
 	kubectl -n $(K8S_BACKEND_NS) set image deployment/user-account-backend backend=$(BACKEND_IMG) db-migrate=$(BACKEND_IMG)
 	kubectl -n $(K8S_BACKEND_NS) set image deployment/ai-backend ai-api=$(AI_IMG)
 	kubectl -n $(K8S_FRONTEND_NS) set image deployment/frontend web=$(FRONTEND_IMG)
@@ -122,3 +125,13 @@ clean:
 	-kubectl delete -k $(K8S_OVERLAY) --ignore-not-found
 	-kubectl -n $(K8S_BACKEND_NS) delete configmap backend-config --ignore-not-found
 	-kubectl -n $(K8S_BACKEND_NS) delete secret backend-secrets --ignore-not-found
+	-kubectl -n actium-database delete secret postgres-credentials --ignore-not-found
+
+reset-k8s-postgres:
+	@echo "$(YELLOW)--- Deleting Postgres StatefulSet (PVCs kept) ---$(NC)"
+	-kubectl -n actium-database delete statefulset postgres --ignore-not-found
+	-kubectl -n actium-database delete svc postgres --ignore-not-found
+
+reset-k8s-postgres-data: reset-k8s-postgres
+	@echo "$(YELLOW)--- Deleting Postgres PVCs (data loss) ---$(NC)"
+	-kubectl -n actium-database delete pvc -l app=postgres --ignore-not-found

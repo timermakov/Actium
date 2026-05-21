@@ -20,7 +20,7 @@ Actium/
 ├── Makefile               # Сборка, Minikube, деплой
 ├── .env.local.example     # Шаблон переменных окружения
 └── infra/
-    ├── database/          # PostgreSQL на хосте (для Kubernetes)
+    ├── database/          # Опционально: PostgreSQL на хосте (вне кластера)
     ├── k8s/               # Манифесты Kustomize (base + overlays)
     ├── argocd/            # GitOps (Argo CD)
     └── terraform/         # Облачная инфраструктура (Yandex Cloud)
@@ -98,17 +98,18 @@ make stop
 
 ## Kubernetes (Minikube)
 
-PostgreSQL для кластера запускается **на хосте**, не внутри Pod'ов — данные переживают передеплой. См. [infra/database/README.md](infra/database/README.md).
+PostgreSQL в кластере: **StatefulSet** + **PVC** в namespace `actium-database` — данные сохраняются при перезапуске Pod'ов. См. [infra/k8s/README.md](infra/k8s/README.md).
 
 ### Подготовка
 
 1. Скопировать `.env.local` (для `make deploy` и секретов в кластере).
-2. В `.env.local` для Minikube укажите `DB_HOST=host.minikube.internal`.
-3. Настроить БД на хосте:
+2. В `.env.local` для Kubernetes:
 
-```bash
-make db-host-up
+```env
+DB_HOST=postgres.actium-database.svc.cluster.local
 ```
+
+(значение уже в [.env.local.example](.env.local.example); для Docker Compose на хосте используйте `DB_HOST=db`.)
 
 ### Кластер и деплой
 
@@ -133,6 +134,8 @@ make deploy
 | `make restart` | Перезапуск деплойментов |
 | `make clean` | Удаление ресурсов overlay |
 | `make reset-k8s-workloads` | Сброс Deployment при ошибке immutable selector |
+| `make reset-k8s-postgres` | Удалить StatefulSet Postgres (PVC сохраняется) |
+| `make reset-k8s-postgres-data` | Удалить Postgres и PVC (полный сброс БД) |
 
 Манифесты: `infra/k8s/overlays/minikube`. Production overlay — для Argo CD: [infra/argocd/README.md](infra/argocd/README.md).
 
