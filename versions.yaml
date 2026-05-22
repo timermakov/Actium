@@ -1,4 +1,4 @@
 # SemVer per service (without "v" prefix). Image tags: v{version}
-user-account-srv: "1.1.0"
+user-account-srv: "1.2.0"
 frontend: "1.2.0"
-ai-srv: "1.0.0"
+ai-srv: "1.2.0"
