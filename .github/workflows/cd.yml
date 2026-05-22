@@ -53,8 +53,21 @@ jobs:
           git commit -m "chore: bump image ${SHORT}"
           git push
 
+      - name: Check Telegram configured
+        id: tg
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Telegram secrets not set, skipping notification"
+          fi
+
       - name: Notify Telegram on CD success
-        if: success() && secrets.TELEGRAM_BOT_TOKEN != ''
+        if: success() && steps.tg.outputs.enabled == 'true'
         uses: appleboy/telegram-action@v1.0.0
         with:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
