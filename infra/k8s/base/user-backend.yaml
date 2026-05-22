@@ -48,10 +48,16 @@ spec:
                 name: backend-config
                 optional: true
           env:
-            - name: DB_HOST
-              value: "host.minikube.internal"
-            - name: DB_PORT
-              value: "5432"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: JWT_SECRET
       containers:
         - name: backend
           image: tsermakov/actium-user-account-backend:v1.0.2
@@ -72,14 +78,20 @@ spec:
                 name: backend-config
                 optional: true
           env:
-            - name: DB_HOST
-              value: "host.minikube.internal"
-            - name: DB_PORT
-              value: "5432"
             - name: APP_HOST
               value: "0.0.0.0"
             - name: APP_PORT
               value: "8080"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: JWT_SECRET
           ports:
             - name: http-metrics
               containerPort: 8080

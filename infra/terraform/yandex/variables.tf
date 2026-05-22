@@ -41,3 +41,8 @@ variable "subnet_id" {
   type        = string
 }
 
+variable "network_id" {
+  description = "VPC network ID for security group"
+  type        = string
+}
+

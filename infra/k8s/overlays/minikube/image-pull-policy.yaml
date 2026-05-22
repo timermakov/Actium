@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-account-backend
+  namespace: actium-backend
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: db-migrate
+          imagePullPolicy: IfNotPresent
+      containers:
+        - name: backend
+          imagePullPolicy: IfNotPresent
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-backend
+  namespace: actium-backend
+spec:
+  template:
+    spec:
+      containers:
+        - name: ai-api
+          imagePullPolicy: IfNotPresent
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: actium-frontend
+spec:
+  template:
+    spec:
+      containers:
+        - name: web
+          imagePullPolicy: IfNotPresent

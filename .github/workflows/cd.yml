@@ -1,0 +1,78 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  bump-manifests:
+    name: Bump K8s image tags
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'master'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Update production image tags
+        working-directory: infra/k8s/overlays/production
+        env:
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          NAMESPACE: ${{ secrets.DOCKERHUB_NAMESPACE || 'tsermakov' }}
+        run: |
+          kustomize edit set image \
+            ${NAMESPACE}/actium-user-account-backend=${NAMESPACE}/actium-user-account-backend:${SHA} \
+            ${NAMESPACE}/actium-ai-backend=${NAMESPACE}/actium-ai-backend:${SHA} \
+            ${NAMESPACE}/actium-templater-frontend=${NAMESPACE}/actium-templater-frontend:${SHA}
+
+      - name: Commit and push
+        env:
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add infra/k8s/overlays/production/kustomization.yaml
+          if git diff --staged --quiet; then
+            echo "No manifest changes"
+            exit 0
+          fi
+          SHORT=$(echo "$SHA" | cut -c1-7)
+          git commit -m "chore: bump image ${SHORT}"
+          git push
+
+      - name: Check Telegram configured
+        id: tg
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Telegram secrets not set, skipping notification"
+          fi
+
+      - name: Notify Telegram on CD success
+        if: success() && steps.tg.outputs.enabled == 'true'
+        uses: appleboy/telegram-action@v1.0.0
+        with:
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          message: |
+            CD ok master
+            Images: ${{ github.event.workflow_run.head_sha }}
+            Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}

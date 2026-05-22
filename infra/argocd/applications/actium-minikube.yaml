@@ -1,0 +1,21 @@
+# Local / lab: manifests live on feature/devops-4 until merged to master.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: actium-minikube
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/timermakov/Actium.git
+    targetRevision: feature/devops-4
+    path: infra/k8s/overlays/minikube
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: actium-backend
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

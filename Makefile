@@ -1,6 +1,7 @@
 BACKEND_DIR  = user-account
 FRONTEND_DIR = templater
-K8S_DIR      = k8s
+K8S_OVERLAY  = infra/k8s/overlays/minikube
+K8S_MIGRATE  = infra/k8s/base/migration-job.yaml
 CONFIG_FILE  = .env.local
 IMAGE_TAG    = v1.0.2
 REGISTRY_NAMESPACE ?= tsermakov
@@ -8,7 +9,6 @@ REGISTRY_NAMESPACE ?= tsermakov
 K8S_BACKEND_NS    = actium-backend
 K8S_FRONTEND_NS   = actium-frontend
 K8S_MONITORING_NS = actium-monitoring
-K8S_DATABASE_NS   = actium-database
 
 BACKEND_IMG  = $(REGISTRY_NAMESPACE)/actium-user-account-backend:$(IMAGE_TAG)
 AI_IMG       = $(REGISTRY_NAMESPACE)/actium-ai-backend:$(IMAGE_TAG)
@@ -17,7 +17,7 @@ FRONTEND_IMG = $(REGISTRY_NAMESPACE)/actium-templater-frontend:$(IMAGE_TAG)
 YELLOW = \033[0;33m
 NC     = \033[0m
 
-.PHONY: run stop clean build-all push-cloud push-local start-cluster db-host-up deploy deploy-local migrate status restart logs-back reset-db
+.PHONY: run stop clean build-all push-cloud push-local start-cluster db-host-up deploy deploy-local migrate status restart logs-back reset-db reset-k8s-workloads reset-k8s-postgres reset-k8s-postgres-data
 
 run:
 	cd $(BACKEND_DIR) && docker compose --env-file .env.local up -d --build
@@ -49,14 +49,12 @@ build-ai:
 
 # --- PUBLISHING ---
 
-# Для Minikube (локально)
 push-local: build-all
 	@echo "$(YELLOW)--- Loading images into Minikube ---$(NC)"
 	minikube image load $(BACKEND_IMG) --overwrite
 	minikube image load $(AI_IMG) --overwrite
 	minikube image load $(FRONTEND_IMG) --overwrite
 
-# Для Docker Hub (облако)
 push-cloud: build-all
 	@echo "$(YELLOW)--- Pushing images to Docker Hub ---$(NC)"
 	docker push $(BACKEND_IMG)
@@ -71,28 +69,28 @@ start-cluster:
 
 db-host-up:
 	@echo "$(YELLOW)--- Starting host PostgreSQL ---$(NC)"
-	@if [ ! -f infra/database/.env.db ]; then cp infra/database/.env.db.example infra/database/.env.db; fi
+ifdef OS
+	@if not exist infra\database\.env.db copy /Y infra\database\.env.db.example infra\database\.env.db
+else
+	@test -f infra/database/.env.db || cp infra/database/.env.db.example infra/database/.env.db
+endif
 	cd infra/database && docker compose --env-file .env.db up -d
 
-deploy: db-host-up
-	@echo "$(YELLOW)--- Deploying to K8s ---$(NC)"
-	kubectl apply -f $(K8S_DIR)/namespaces.yaml
+reset-k8s-workloads:
+	@echo "$(YELLOW)--- Deleting workloads (immutable selector recovery) ---$(NC)"
+	-kubectl -n $(K8S_BACKEND_NS) delete deployment user-account-backend ai-backend --ignore-not-found
+	-kubectl -n $(K8S_FRONTEND_NS) delete deployment frontend --ignore-not-found
+	-kubectl -n $(K8S_MONITORING_NS) delete deployment prometheus grafana kube-state-metrics --ignore-not-found
+	-kubectl -n $(K8S_MONITORING_NS) delete daemonset node-exporter --ignore-not-found
+
+deploy:
+	@echo "$(YELLOW)--- Deploying to K8s (kustomize) ---$(NC)"
+	kubectl apply -k $(K8S_OVERLAY)
 	kubectl create configmap backend-config -n $(K8S_BACKEND_NS) --from-env-file=$(CONFIG_FILE) --dry-run=client -o yaml | kubectl apply -f -
-	kubectl apply -f $(K8S_DIR)/user-backend.yaml
-	kubectl apply -f $(K8S_DIR)/ai-backend.yaml
-	kubectl apply -f $(K8S_DIR)/frontend.yaml
-	kubectl apply -f $(K8S_DIR)/prometheus.yaml
-	kubectl apply -f $(K8S_DIR)/node-exporter.yaml
-	kubectl apply -f $(K8S_DIR)/kube-state-metrics.yaml
-	kubectl apply -f $(K8S_DIR)/grafana-provisioning.yaml
-	kubectl apply -f $(K8S_DIR)/grafana-dashboard-user-backend.yaml
-	kubectl apply -f $(K8S_DIR)/grafana-dashboard-frontend.yaml
-	kubectl apply -f $(K8S_DIR)/grafana-dashboard-k8s-pods.yaml
-	kubectl apply -f $(K8S_DIR)/grafana-dashboard-api-overview.yaml
-	kubectl apply -f $(K8S_DIR)/grafana.yaml
-	kubectl apply -f $(K8S_DIR)/ingress-backend.yaml
-	kubectl apply -f $(K8S_DIR)/ingress-grafana.yaml
-	kubectl apply -f $(K8S_DIR)/ingress-frontend.yaml
+	kubectl create secret generic backend-secrets -n $(K8S_BACKEND_NS) --from-env-file=$(CONFIG_FILE) --dry-run=client -o yaml | kubectl apply -f -
+	kubectl create secret generic postgres-credentials -n actium-database --from-env-file=$(CONFIG_FILE) --dry-run=client -o yaml | kubectl apply -f -
+	@echo "$(YELLOW)--- Waiting for PostgreSQL ---$(NC)"
+	kubectl -n actium-database rollout status statefulset/postgres --timeout=180s
 	kubectl -n $(K8S_BACKEND_NS) set image deployment/user-account-backend backend=$(BACKEND_IMG) db-migrate=$(BACKEND_IMG)
 	kubectl -n $(K8S_BACKEND_NS) set image deployment/ai-backend ai-api=$(AI_IMG)
 	kubectl -n $(K8S_FRONTEND_NS) set image deployment/frontend web=$(FRONTEND_IMG)
@@ -108,7 +106,7 @@ deploy-local: push-local deploy
 migrate:
 	@echo "$(YELLOW)--- Running DB Migrations ---$(NC)"
 	-kubectl -n $(K8S_BACKEND_NS) delete job user-account-db-migrate --ignore-not-found
-	kubectl apply -f $(K8S_DIR)/migration-job.yaml
+	kubectl apply -f $(K8S_MIGRATE)
 	kubectl -n $(K8S_BACKEND_NS) wait --for=condition=complete --timeout=180s job/user-account-db-migrate
 	kubectl -n $(K8S_BACKEND_NS) logs -l job-name=user-account-db-migrate
 
@@ -124,21 +122,16 @@ logs-back:
 	kubectl -n $(K8S_BACKEND_NS) logs -l app=user-account-backend -f
 
 clean:
-	-kubectl delete -f $(K8S_DIR)/ingress-frontend.yaml --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/ingress-grafana.yaml --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/ingress-backend.yaml --ignore-not-found
-	-kubectl -n $(K8S_FRONTEND_NS) delete ingress actium-ingress --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/grafana.yaml --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/grafana-dashboard-k8s-pods.yaml --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/grafana-dashboard-api-overview.yaml --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/grafana-dashboard-frontend.yaml --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/grafana-dashboard-user-backend.yaml --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/grafana-provisioning.yaml --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/kube-state-metrics.yaml --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/node-exporter.yaml --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/prometheus.yaml --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/frontend.yaml --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/ai-backend.yaml --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/user-backend.yaml --ignore-not-found
-	-kubectl delete -f $(K8S_DIR)/migration-job.yaml --ignore-not-found
+	-kubectl delete -k $(K8S_OVERLAY) --ignore-not-found
 	-kubectl -n $(K8S_BACKEND_NS) delete configmap backend-config --ignore-not-found
+	-kubectl -n $(K8S_BACKEND_NS) delete secret backend-secrets --ignore-not-found
+	-kubectl -n actium-database delete secret postgres-credentials --ignore-not-found
+
+reset-k8s-postgres:
+	@echo "$(YELLOW)--- Deleting Postgres StatefulSet (PVCs kept) ---$(NC)"
+	-kubectl -n actium-database delete statefulset postgres --ignore-not-found
+	-kubectl -n actium-database delete svc postgres --ignore-not-found
+
+reset-k8s-postgres-data: reset-k8s-postgres
+	@echo "$(YELLOW)--- Deleting Postgres PVCs (data loss) ---$(NC)"
+	-kubectl -n actium-database delete pvc -l app=postgres --ignore-not-found

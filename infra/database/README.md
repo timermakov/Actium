@@ -1,29 +1,37 @@
-# PostgreSQL on VM host (outside Kubernetes)
+# PostgreSQL on VM host (optional)
 
-Database runs in Docker on the VM host so data survives cluster redeploys and Argo CD prune.
+Запуск PostgreSQL в Docker **на хосте** — альтернатива in-cluster StatefulSet ([`../k8s/README.md`](../k8s/README.md)). По умолчанию `make deploy` поднимает БД **в Kubernetes** (StatefulSet + PVC).
 
-## One-time setup on VM
+Используйте host DB, если нужна БД вне кластера (например, одна БД на несколько сред или ручной доступ с хоста).
+
+## One-time setup (VM or Windows)
 
 ```bash
-cd ~/Actium/infra/database
-cp .env.db.example .env.db
+# from repository root (not ~/)
+cd infra/database
+cp .env.db.example .env.db   # Windows: copy .env.db.example .env.db
 # edit .env.db with strong passwords
 docker compose --env-file .env.db up -d
-docker compose ps
+docker compose --env-file .env.db ps
 ```
 
-## Minikube connection
+Always pass `--env-file .env.db` for `ps` / `logs` — otherwise compose warns about empty `DB_*` variables.
 
-Kubernetes workloads use `DB_HOST=host.minikube.internal` (port 5432 on the host).
+## Minikube connection (host DB mode)
 
-If connection fails on Linux:
+В `.env.local`:
+
+```env
+DB_HOST=host.minikube.internal
+```
 
 ```bash
-minikube ssh -- grep host.minikube.internal /etc/hosts
-# or use host gateway IP from: docker network inspect minikube
+make db-host-up
 ```
+
+> Штатный деплой: `DB_HOST=postgres.actium-database.svc.cluster.local`, `make deploy` (StatefulSet в кластере). Не смешивайте host DB и in-cluster Postgres без смены `DB_HOST`.
 
 ## Do not
 
-- Apply `k8s/postgres.yaml` (deprecated in-cluster DB).
+- Одновременно поднимать host Postgres и in-cluster StatefulSet на одном порту 5432 без необходимости.
 - Expose port 5432 in Terraform security group to the public internet.

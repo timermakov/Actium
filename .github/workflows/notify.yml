@@ -1,0 +1,59 @@
+name: Notify
+
+on:
+  workflow_run:
+    workflows: ["CI", "CD"]
+    types: [completed]
+
+jobs:
+  telegram:
+    name: Telegram CI/CD status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve workflow conclusion
+        id: meta
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const ok = run.conclusion === 'success';
+            const icon = ok ? '✅' : '❌';
+            const repo = run.repository.full_name;
+            const url = `https://github.com/${repo}/actions/runs/${run.id}`;
+            let failedJobs = '';
+            if (!ok) {
+              const jobs = await github.rest.actions.listJobsForWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: run.id,
+              });
+              const bad = jobs.data.jobs.filter(j => j.conclusion === 'failure');
+              failedJobs = bad.map(j => `${j.name}: ${j.html_url}`).join('\n');
+            }
+            core.setOutput('icon', icon);
+            core.setOutput('url', url);
+            core.setOutput('failed', failedJobs || 'see workflow run');
+
+      - name: Check Telegram configured
+        id: tg
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Telegram secrets not set, skipping notification"
+          fi
+
+      - name: Send Telegram
+        if: steps.tg.outputs.enabled == 'true'
+        uses: appleboy/telegram-action@v1.0.0
+        with:
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          message: |
+            ${{ steps.meta.outputs.icon }} ${{ github.event.workflow_run.name }} (${{ github.event.workflow_run.head_branch }})
+            Conclusion: ${{ github.event.workflow_run.conclusion }}
+            Run: ${{ steps.meta.outputs.url }}
+            ${{ github.event.workflow_run.conclusion != 'success' && format('Failed:\n{0}', steps.meta.outputs.failed) || '' }}
