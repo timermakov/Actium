@@ -8,11 +8,11 @@ SONAR_URL="${SONAR_HOST_URL:-http://localhost:9000}"
 SONAR_USER="${SONAR_USER:-admin}"
 SONAR_PASS="${SONAR_PASS:-admin}"
 
-# Проекты для создания
+# Проекты: key:name:visibility (private|public)
 PROJECTS=(
-  "actium-user-account-srv:Actium User Account Srv (Go)"
-  "actium-web:Actium Web Frontend (TypeScript/React)"
-  "actium-ai-srv:Actium AI Srv (Python/FastAPI)"
+  "actium-user-account-srv:Actium User Account Srv (Go):private"
+  "actium-web:Actium Web Frontend (TypeScript/React):private"
+  "actium-ai-srv:Actium AI Srv (Python/FastAPI):public"
 )
 
 echo "Initializing SonarQube projects at $SONAR_URL"
@@ -30,9 +30,9 @@ AUTH="$SONAR_USER:$SONAR_PASS"
 
 # Создание проектов
 for project in "${PROJECTS[@]}"; do
-  IFS=':' read -r key name <<< "$project"
+  IFS=':' read -r key name visibility <<< "$project"
 
-  echo "Creating project: $name ($key)"
+  echo "Creating project: $name ($key, visibility=${visibility})"
 
   # Создание проекта
   curl -s -X POST \
@@ -40,8 +40,16 @@ for project in "${PROJECTS[@]}"; do
     "$SONAR_URL/api/projects/create" \
     -d "name=$name" \
     -d "project=$key" \
-    -d "visibility=private" \
+    -d "visibility=${visibility}" \
     -o /dev/null || echo "  Project might already exist"
+
+  # Если проект уже существовал — выставить visibility
+  curl -s -X POST \
+    -u "$AUTH" \
+    "$SONAR_URL/api/projects/update_visibility" \
+    -d "project=${key}" \
+    -d "visibility=${visibility}" \
+    -o /dev/null || true
 
   # Создание токена
   echo "  Generating token..."

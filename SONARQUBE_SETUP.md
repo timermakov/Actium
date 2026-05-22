@@ -9,11 +9,11 @@
 
 ### 2. Проекты
 
-| Project key | Описание |
-|-------------|----------|
-| `actium-user-account-srv` | Go backend |
-| `actium-web` | TypeScript/React frontend |
-| `actium-ai-srv` | Python/FastAPI AI API |
+| Project key | Описание | Видимость |
+|-------------|----------|-----------|
+| `actium-user-account-srv` | Go backend | private |
+| `actium-web` | TypeScript/React frontend | private |
+| `actium-ai-srv` | Python/FastAPI AI API | **public** |
 
 ### 3. GitHub Secrets
 
