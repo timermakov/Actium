@@ -459,7 +459,7 @@ jobs:
         run: echo "SONAR_TOKEN_USER_ACCOUNT not set — scan skipped"
 
   sonarqube-web:
-    name: SonarQube – Web
+    name: SonarQube – actium-web
     runs-on: ubuntu-latest
     needs: web-test
     if: needs.web-test.result == 'success'
@@ -490,6 +490,7 @@ jobs:
           projectBaseDir: templater/apps/web
           args: >
             -Dsonar.projectKey=actium-web
+            -Dsonar.projectName=actium-web
             -Dsonar.projectVersion=${{ steps.ver.outputs.version }}
             -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info

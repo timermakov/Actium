@@ -11,7 +11,7 @@ SONAR_PASS="${SONAR_PASS:-admin}"
 # Проекты: key:name:visibility (private|public)
 PROJECTS=(
   "actium-user-account-srv:user-srv:private"
-  "actium-web:Actium Web Frontend (TypeScript/React):private"
+  "actium-web:actium-web:private"
   "actium-ai-srv:ai-srv:public"
 )
 

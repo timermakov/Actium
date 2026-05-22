@@ -12,7 +12,7 @@
 | Project key | Описание | Видимость |
 |-------------|----------|-----------|
 | `actium-user-account-srv` | **user-srv** (Go) | private |
-| `actium-web` | Actium Web Frontend | private |
+| `actium-web` | **actium-web** | private |
 | `actium-ai-srv` | **ai-srv** (Python/FastAPI) | **public** |
 
 ### 3. GitHub Secrets

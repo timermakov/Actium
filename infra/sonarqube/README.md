@@ -29,7 +29,7 @@ docker compose -f docker-compose.local.yaml logs -f sonarqube
 1. My Account → Security → Generate Tokens
 2. Создайте Project Analysis Token для каждого проекта:
    - `actium-user-account-srv` (private)
-   - `actium-web` (private)
+   - `actium-web` (display name **actium-web**, private)
    - `actium-ai-srv` (**public** — виден без логина)
 
 Или автоматически: `./init-projects.sh` (AI — `visibility=public`).
