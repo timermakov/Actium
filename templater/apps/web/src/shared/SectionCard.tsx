@@ -15,7 +15,7 @@ export function SectionCard({
     actions,
     children,
     showDivider = false,
-}: SectionCardProps) {
+}: Readonly<SectionCardProps>) {
     const shouldShowDivider = showDivider || Boolean(actions)
     return (
         <Paper variant="outlined" sx={{ p: 3 }}>

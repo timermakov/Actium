@@ -108,14 +108,27 @@ minikube status
 make status
 ```
 
-server
+server (178.154.244.207)
 ```
 ssh tsermakov@178.154.244.207
 cd ~/Actium
 make deploy-local
+sudo systemctl enable --now minikube-tunnel   # systemd unit from infra/k8s/systemd/
+# optional: nginx publish 0.0.0.0:80 -> 127.0.0.1 (infra/k8s/nginx/actium-tunnel-publish.conf)
 ```
 (Migrations run automatically via `make deploy` / init container.)
+
+## Main pages (with `minikube tunnel`)
+
 ```
+Frontend -  http://localhost/
+Backend Swagger - http://localhost/docs
+Backend (users) - http://localhost/api/user/health
+Backend (AI) - http://localhost/api/ai/health
+Grafana - http://localhost/grafana/
+```
+
+On the server VM, replace `localhost` with the VM IP if nginx publish is configured.
 
 local cluster
 ```
@@ -130,16 +143,6 @@ make deploy-local
 in separate terminal:
 ```
 minikube tunnel
-```
-
-## Main pages
-
-```
-Frontend -  http://localhost:8080/
-Backend Swagger - http://localhost:8080/docs
-Backend (users) - http://localhost:8080/api/user/health
-Backend (AI) - http://localhost:8080/api/ai/health
-Grafana - http://localhost:8080/grafana/
 ```
 
 ## AI Backend (optional, v0.1.1)

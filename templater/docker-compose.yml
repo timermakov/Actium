@@ -1,9 +1,9 @@
 services:
-  ai-backend:
+  ai-srv:
     build:
       context: apps/api
       dockerfile: Dockerfile
-    image: tsermakov/actium-ai-backend:latest
+    image: tsermakov/actium-ai-srv:latest
     container_name: actium_ai_backend
     env_file:
       - ../.env.local
@@ -30,5 +30,5 @@ services:
     ports:
       - "${WEB_PORT}:80"
     depends_on:
-      ai-backend:
+      ai-srv:
         condition: service_started

@@ -39,7 +39,7 @@ export function MappingCard({
   onImportMapping,
   onImportError,
   onExportMapping,
-}: MappingCardProps) {
+}: Readonly<MappingCardProps>) {
   const { t } = useTranslation()
   const inputRef = useRef<HTMLInputElement | null>(null)
 
@@ -95,7 +95,6 @@ export function MappingCard({
       }
     >
       {error ? <Alert severity="error">{error}</Alert> : null}
-      {!isReady ? <Alert severity="info">{t('mapping.notReady')}</Alert> : null}
       {isReady ? (
         <Paper variant="outlined">
           <TableContainer>
@@ -134,7 +133,9 @@ export function MappingCard({
             </Table>
           </TableContainer>
         </Paper>
-      ) : null}
+      ) : (
+        <Alert severity="info">{t('mapping.notReady')}</Alert>
+      )}
     </SectionCard>
   )
 }

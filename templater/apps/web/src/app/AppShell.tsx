@@ -3,10 +3,10 @@ import type { ReactNode } from 'react'
 import Header from '../components/layout/Header.tsx'
 
 type AppShellProps = {
-  children: ReactNode
+  readonly children: ReactNode
 }
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children }: Readonly<AppShellProps>) {
   return (
       <Box sx={{ minHeight: '100vh' }}>
         <Header />

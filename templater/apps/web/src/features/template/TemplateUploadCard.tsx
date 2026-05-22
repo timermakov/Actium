@@ -14,7 +14,7 @@ export function TemplateUploadCard({
   fields,
   error,
   onFileSelected,
-}: TemplateUploadCardProps) {
+}: Readonly<TemplateUploadCardProps>) {
   const { t } = useTranslation()
   const inputRef = useRef<HTMLInputElement | null>(null)
 

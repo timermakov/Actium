@@ -5,52 +5,57 @@ on:
     workflows: ["CI"]
     types: [completed]
     branches: [master]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   bump-manifests:
-    name: Bump K8s image tags
+    name: Bump K8s image tags (registry versions)
     runs-on: ubuntu-latest
     if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_branch == 'master'
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == 'master'
+      )
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: master
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'master' || github.event.workflow_run.head_sha }}
           token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Setup Kustomize
         uses: imranismail/setup-kustomize@v2
 
-      - name: Update production image tags
-        working-directory: infra/k8s/overlays/production
+      - name: Read versions and update production overlay
+        id: tags
         env:
-          SHA: ${{ github.event.workflow_run.head_sha }}
           NAMESPACE: ${{ secrets.DOCKERHUB_NAMESPACE || 'tsermakov' }}
         run: |
-          kustomize edit set image \
-            ${NAMESPACE}/actium-user-account-backend=${NAMESPACE}/actium-user-account-backend:${SHA} \
-            ${NAMESPACE}/actium-ai-backend=${NAMESPACE}/actium-ai-backend:${SHA} \
-            ${NAMESPACE}/actium-templater-frontend=${NAMESPACE}/actium-templater-frontend:${SHA}
+          chmod +x scripts/version.sh scripts/kustomize-set-image-tags.sh
+          ./scripts/kustomize-set-image-tags.sh production "${NAMESPACE}"
+          echo "backend_tag=$(scripts/version.sh image-tag user-account-srv)" >> "$GITHUB_OUTPUT"
+          echo "frontend_tag=$(scripts/version.sh image-tag frontend)" >> "$GITHUB_OUTPUT"
+          echo "ai_tag=$(scripts/version.sh image-tag ai-srv)" >> "$GITHUB_OUTPUT"
+          echo "Images in registry (pull by these tags):"
+          echo "  ${NAMESPACE}/actium-user-account-srv:$(scripts/version.sh image-tag user-account-srv)"
+          echo "  ${NAMESPACE}/actium-templater-frontend:$(scripts/version.sh image-tag frontend)"
+          echo "  ${NAMESPACE}/actium-ai-srv:$(scripts/version.sh image-tag ai-srv)"
 
       - name: Commit and push
-        env:
-          SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add infra/k8s/overlays/production/kustomization.yaml
           if git diff --staged --quiet; then
-            echo "No manifest changes"
+            echo "No manifest changes (tags already match versions.yaml)"
             exit 0
           fi
-          SHORT=$(echo "$SHA" | cut -c1-7)
-          git commit -m "chore: bump image ${SHORT}"
+          git commit -m "chore(cd): sync production images to versions.yaml (backend=${{ steps.tags.outputs.backend_tag }} frontend=${{ steps.tags.outputs.frontend_tag }} ai=${{ steps.tags.outputs.ai_tag }})"
           git push
 
       - name: Check Telegram configured
@@ -73,6 +78,6 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           message: |
-            CD ok master
-            Images: ${{ github.event.workflow_run.head_sha }}
-            Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+            CD ok — production kustomize synced to versions.yaml
+            backend=${{ steps.tags.outputs.backend_tag }} frontend=${{ steps.tags.outputs.frontend_tag }} ai=${{ steps.tags.outputs.ai_tag }}
+            Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}

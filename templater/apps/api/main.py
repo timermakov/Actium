@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import os
 import time
-from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Response, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 try:
@@ -13,52 +12,71 @@ try:
 except ImportError:  # pragma: no cover - fallback for older package layout
     from langchain_gigachat.chat_models import GigaChat
 from pydantic import BaseModel, Field
-from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
 
 load_dotenv()
+
+AI_SUMMARY_PATH = "/ai/summary"
+AI_ADVICE_PATH = "/ai/advice"
+
+AI_ERROR_RESPONSES: dict[int, dict[str, str]] = {
+    400: {"description": "Invalid request payload"},
+    500: {"description": "AI service or configuration error"},
+}
+
+DEFAULT_CORS_ORIGINS = "https://actium-docs.vercel.app"
 
 # Prometheus metrics
 HTTP_REQUESTS_TOTAL = Counter(
     "http_requests_total",
     "Total number of HTTP requests",
-    ["method", "path", "status"]
+    ["method", "path", "status"],
 )
 HTTP_REQUEST_DURATION_SECONDS = Histogram(
     "http_request_duration_seconds",
     "HTTP request duration in seconds",
     ["method", "path", "status"],
-    buckets=[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+    buckets=[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
 )
 HTTP_REQUESTS_IN_FLIGHT = Gauge(
     "http_requests_in_flight",
-    "Number of HTTP requests currently being served"
+    "Number of HTTP requests currently being served",
 )
 AI_REQUESTS_TOTAL = Counter(
     "ai_requests_total",
     "Total number of AI requests",
-    ["endpoint", "status"]
+    ["endpoint", "status"],
 )
 AI_REQUEST_DURATION_SECONDS = Histogram(
     "ai_request_duration_seconds",
     "AI request duration in seconds",
     ["endpoint"],
-    buckets=[0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0]
+    buckets=[0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0],
 )
+
+
+def trim_trailing_slashes(value: str) -> str:
+    end = len(value)
+    while end > 0 and value[end - 1] == "/":
+        end -= 1
+    return value[:end]
+
+
+def parse_cors_origins(raw_value: str) -> list[str]:
+    origins: list[str] = []
+    for origin in raw_value.split(","):
+        cleaned = trim_trailing_slashes(origin.strip())
+        if cleaned:
+            origins.append(cleaned)
+    return origins
+
 
 app = FastAPI(title="Actium AI API", version="0.1.2")
 
-raw_origins = os.getenv(
-    "CORS_ORIGINS",
-    "http://localhost:5173,https://actium-docs.vercel.app",
-)
-origins = [
-    origin.strip().rstrip("/")
-    for origin in raw_origins.split(",")
-    if origin.strip()
-]
+raw_origins = os.getenv("CORS_ORIGINS", DEFAULT_CORS_ORIGINS)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in origins if origin.strip()],
+    allow_origins=parse_cors_origins(raw_origins),
     allow_credentials=True,
     allow_methods=["POST", "OPTIONS"],
     allow_headers=["*"],
@@ -142,11 +160,11 @@ def get_client() -> GigaChat:
     )
 
 
-@app.post("/ai/summary", response_model=AIResponse)
+@app.post(AI_SUMMARY_PATH, responses=AI_ERROR_RESPONSES)
 def generate_summary(payload: SummaryRequest) -> AIResponse:
     start_time = time.time()
     if payload.row_count <= 0 or not payload.columns:
-        AI_REQUESTS_TOTAL.labels(endpoint="/ai/summary", status="4xx").inc()
+        AI_REQUESTS_TOTAL.labels(endpoint=AI_SUMMARY_PATH, status="4xx").inc()
         raise HTTPException(status_code=400, detail="Empty dataset.")
     language = "Russian" if payload.language.lower().startswith("ru") else "English"
     prompt = (
@@ -163,28 +181,28 @@ def generate_summary(payload: SummaryRequest) -> AIResponse:
         client = get_client()
         response = client.invoke(prompt)
         content = response.content if hasattr(response, "content") else str(response)
-        AI_REQUESTS_TOTAL.labels(endpoint="/ai/summary", status="2xx").inc()
-        AI_REQUEST_DURATION_SECONDS.labels(endpoint="/ai/summary").observe(time.time() - start_time)
+        AI_REQUESTS_TOTAL.labels(endpoint=AI_SUMMARY_PATH, status="2xx").inc()
+        AI_REQUEST_DURATION_SECONDS.labels(endpoint=AI_SUMMARY_PATH).observe(time.time() - start_time)
         return AIResponse(content=str(content))
     except HTTPException as he:
         status_label = str(he.status_code)[0] + "xx"
-        AI_REQUESTS_TOTAL.labels(endpoint="/ai/summary", status=status_label).inc()
+        AI_REQUESTS_TOTAL.labels(endpoint=AI_SUMMARY_PATH, status=status_label).inc()
         raise
     except Exception as exc:
-        AI_REQUESTS_TOTAL.labels(endpoint="/ai/summary", status="5xx").inc()
+        AI_REQUESTS_TOTAL.labels(endpoint=AI_SUMMARY_PATH, status="5xx").inc()
         raise HTTPException(status_code=500, detail=f"AI request failed: {exc}") from exc
 
 
-@app.options("/ai/summary")
+@app.options(AI_SUMMARY_PATH)
 def summary_preflight() -> Response:
     return Response(status_code=204)
 
 
-@app.post("/ai/advice", response_model=AIResponse)
+@app.post(AI_ADVICE_PATH, responses=AI_ERROR_RESPONSES)
 def generate_advice(payload: AdviceRequest) -> AIResponse:
     start_time = time.time()
     if not payload.template_fields:
-        AI_REQUESTS_TOTAL.labels(endpoint="/ai/advice", status="4xx").inc()
+        AI_REQUESTS_TOTAL.labels(endpoint=AI_ADVICE_PATH, status="4xx").inc()
         raise HTTPException(status_code=400, detail="Template fields are missing.")
     language = "Russian" if payload.language.lower().startswith("ru") else "English"
     prompt = (
@@ -203,18 +221,18 @@ def generate_advice(payload: AdviceRequest) -> AIResponse:
         client = get_client()
         response = client.invoke(prompt)
         content = response.content if hasattr(response, "content") else str(response)
-        AI_REQUESTS_TOTAL.labels(endpoint="/ai/advice", status="2xx").inc()
-        AI_REQUEST_DURATION_SECONDS.labels(endpoint="/ai/advice").observe(time.time() - start_time)
+        AI_REQUESTS_TOTAL.labels(endpoint=AI_ADVICE_PATH, status="2xx").inc()
+        AI_REQUEST_DURATION_SECONDS.labels(endpoint=AI_ADVICE_PATH).observe(time.time() - start_time)
         return AIResponse(content=str(content))
     except HTTPException as he:
         status_label = str(he.status_code)[0] + "xx"
-        AI_REQUESTS_TOTAL.labels(endpoint="/ai/advice", status=status_label).inc()
+        AI_REQUESTS_TOTAL.labels(endpoint=AI_ADVICE_PATH, status=status_label).inc()
         raise
     except Exception as exc:
-        AI_REQUESTS_TOTAL.labels(endpoint="/ai/advice", status="5xx").inc()
+        AI_REQUESTS_TOTAL.labels(endpoint=AI_ADVICE_PATH, status="5xx").inc()
         raise HTTPException(status_code=500, detail=f"AI request failed: {exc}") from exc
 
 
-@app.options("/ai/advice")
+@app.options(AI_ADVICE_PATH)
 def advice_preflight() -> Response:
     return Response(status_code=204)

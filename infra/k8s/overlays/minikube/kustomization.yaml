@@ -5,15 +5,15 @@ resources:
   - ../../base
 
 images:
-  - name: tsermakov/actium-user-account-backend
-    newName: tsermakov/actium-user-account-backend
-    newTag: v1.0.2
-  - name: tsermakov/actium-ai-backend
-    newName: tsermakov/actium-ai-backend
-    newTag: v1.0.2
+  - name: tsermakov/actium-user-account-srv
+    newName: tsermakov/actium-user-account-srv
+    newTag: v1.1.0
+  - name: tsermakov/actium-ai-srv
+    newName: tsermakov/actium-ai-srv
+    newTag: v1.0.0
   - name: tsermakov/actium-templater-frontend
     newName: tsermakov/actium-templater-frontend
-    newTag: v1.0.2
+    newTag: v1.2.0
 
 patches:
   - path: image-pull-policy.yaml

@@ -1,0 +1,16 @@
+# GitHub Actions secrets
+
+| Secret | Used by | Description |
+|--------|---------|-------------|
+| `DOCKERHUB_USERNAME` | CI | Registry login |
+| `DOCKERHUB_TOKEN` | CI | Registry password |
+| `DOCKERHUB_NAMESPACE` | CI, CD | Image prefix (default: username) |
+| `GH_PAT` | CD | Push manifest bumps to `master` |
+| `TELEGRAM_BOT_TOKEN` | notify.yml, cd.yml | Bot token from @BotFather |
+| `TELEGRAM_CHAT_ID` | notify.yml, cd.yml | Target chat id |
+| `SONAR_HOST_URL` | CI | `http://178.154.244.207:9090` (no trailing slash; TCP/9090 open for GitHub Actions) |
+| `SONAR_TOKEN_USER_ACCOUNT` | CI | Project token for `actium-user-account-srv` |
+| `SONAR_TOKEN_WEB` | CI | Project token for `actium-web` |
+| `SONAR_TOKEN_AI` | CI | Project token for `actium-ai-srv` |
+
+Telegram notifications are skipped until bot token and chat id are configured.

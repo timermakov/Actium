@@ -1,0 +1,24 @@
+# Install on Linux server (after minikube start + ingress addon):
+#   sudo cp infra/k8s/systemd/minikube-tunnel.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now minikube-tunnel.service
+#
+# Tunnel exposes Ingress on 127.0.0.1:80 (SSH port-forward into minikube).
+# For public VM IP, also enable nginx-tunnel-publish (see README).
+
+[Unit]
+Description=Minikube tunnel (Ingress / LoadBalancer)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tsermakov
+Group=tsermakov
+Environment=HOME=/home/tsermakov
+ExecStart=/usr/local/bin/minikube tunnel --bind-address=*
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

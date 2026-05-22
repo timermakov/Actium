@@ -51,8 +51,8 @@ After merge to master — use `actium-app.yaml` with `targetRevision: master` an
 
 ## Flow
 
-1. CI pushes images tagged with `github.sha`.
-2. CD workflow commits new tags to `infra/k8s/overlays/production/kustomization.yaml`.
-3. Argo CD detects drift and syncs the cluster.
+1. **Каждый push в `master`:** CI пушит образы с тегом `github.sha`; CD обновляет `overlays/production` через `kustomize edit set image` (см. [`scripts/kustomize-set-image-tags.sh`](../scripts/kustomize-set-image-tags.sh)).
+2. **Релиз по сервису** (`backend/v*`, `frontend/v*`, `ai/v*`) или **bundle** `release/v*`: см. [`docs/RELEASE.md`](../../docs/RELEASE.md) и [`versions.yaml`](../../versions.yaml).
+3. Argo CD синхронизирует кластер с Git.
 
 PostgreSQL (StatefulSet в `actium-database`, sync-wave `-1`) синхронизируется вместе с приложением. Host DB — опционально: [`../database/README.md`](../database/README.md).

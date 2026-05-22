@@ -17,7 +17,7 @@ export function UserManagementPage() {
     const [submitting, setSubmitting] = useState(false)
 
     const handleDelete = async (id: string) => {
-        if (window.confirm('Вы уверены, что хотите удалить этого пользователя?')) {
+        if (globalThis.confirm('Вы уверены, что хотите удалить этого пользователя?')) {
             try {
                 await deleteUser(id)
             } catch (err) {

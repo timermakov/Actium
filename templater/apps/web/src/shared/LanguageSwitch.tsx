@@ -18,7 +18,9 @@ export function LanguageSwitch() {
             {languageOptions.map((option) => (
                 <Button
                     key={option.value}
-                    onClick={() => void i18n.changeLanguage(option.value)}
+                    onClick={() => {
+                        i18n.changeLanguage(option.value).catch(() => {})
+                    }}
                     sx={{
                         fontWeight: i18n.language === option.value ? 'bold' : 'normal',
                         minWidth: 48,

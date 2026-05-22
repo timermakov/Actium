@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: user-account-backend
+  name: user-account-srv
   namespace: actium-backend
 spec:
   template:
@@ -16,7 +16,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ai-backend
+  name: ai-srv
   namespace: actium-backend
 spec:
   template:

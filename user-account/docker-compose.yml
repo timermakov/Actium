@@ -14,9 +14,9 @@ services:
       - db_data:/var/lib/postgresql/data
       - ./initdb:/docker-entrypoint-initdb.d
 
-  user-account-backend:
+  user-account-srv:
     build: .
-    image: tsermakov/actium-user-account-backend:latest
+    image: tsermakov/actium-user-account-srv:latest
     container_name: actium_user_account_backend
     env_file:
       - .env.local

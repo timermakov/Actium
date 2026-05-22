@@ -130,7 +130,7 @@ make deploy
 |---------|----------|
 | `make status` | Pod'ы, сервисы, ingress |
 | `make migrate` | Job миграций в кластере |
-| `make logs-back` | Логи user-account-backend |
+| `make logs-back` | Логи user-account-srv |
 | `make restart` | Перезапуск деплойментов |
 | `make clean` | Удаление ресурсов overlay |
 | `make reset-k8s-workloads` | Сброс Deployment при ошибке immutable selector |
@@ -143,8 +143,9 @@ make deploy
 
 ## CI/CD
 
-- **CI** (`.github/workflows/ci.yml`): тесты Go и фронта, сборка и push образов в Docker Hub.
-- **CD** (`.github/workflows/cd.yml`): обновление тегов образов в `infra/k8s/overlays/production`.
+- **CI** (`.github/workflows/ci.yml`): тесты Go, web, AI; SonarQube; push образов `:sha` в Docker Hub.
+- **CD** (`.github/workflows/cd.yml`): после CI на `master` — `kustomize` теги `:sha` в `overlays/production`.
+- **Release** (`.github/workflows/release.yml`): теги `backend/v*`, `frontend/v*`, `ai/v*`, `release/v*` — отдельные версии образов. См. [`docs/RELEASE.md`](docs/RELEASE.md), [`versions.yaml`](versions.yaml).
 - **Уведомления** (`.github/workflows/notify.yml`): Telegram при сбоях.
 
 Секреты для GitHub Actions: [infra/GITHUB_ACTIONS_SECRETS.md](infra/GITHUB_ACTIONS_SECRETS.md).

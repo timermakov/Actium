@@ -57,3 +57,8 @@ coverage.*
 Thumbs.db
 *.swp
 *.swo
+
+# ngrok
+ngrok.exe
+ngrok.zip
+.ngrok*

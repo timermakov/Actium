@@ -1,7 +1,5 @@
 export const API_URL = '/api/user';
 
-console.log("!!! API_URL CHECK:", API_URL);
-
 /**
  * Универсальный обработчик ответов от сервера
  */
@@ -9,7 +7,7 @@ export async function handleResponse<T>(response: Response): Promise<T> {
     const contentType = response.headers.get("content-type");
 
     if (!response.ok) {
-        if (contentType && contentType.includes("application/json")) {
+        if (contentType?.includes("application/json")) {
             const errorData = await response.json();
             throw new Error(errorData.error || `Error ${response.status}`);
         }
@@ -19,7 +17,7 @@ export async function handleResponse<T>(response: Response): Promise<T> {
 
     if (response.status === 204) return {} as T;
 
-    return (contentType && contentType.includes("application/json"))
+    return contentType?.includes("application/json")
         ? response.json()
         : ({} as T);
 }

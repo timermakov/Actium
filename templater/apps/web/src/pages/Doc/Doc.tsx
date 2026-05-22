@@ -17,13 +17,13 @@ import { parseCsv, parseXlsx, getPreviewRows } from '../../utils/dataParsing.ts'
 import { extractPlaceholdersFromDocx, generateDocxBlob } from '../../utils/docx.ts'
 import { buildFileName } from '../../utils/filename.ts'
 import { readFileAsArrayBuffer, readFileAsText } from '../../utils/files.ts'
+import { resolveApiBaseUrl } from '../../utils/url.ts'
 
 function App() {
     const { t, i18n } = useTranslation()
-    const rawApiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').trim()
+    const rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? ''
     const fallbackApiBaseUrl = import.meta.env.DEV ? 'http://localhost:8001' : ''
-    const normalizedApiBaseUrl = (rawApiBaseUrl || fallbackApiBaseUrl).replace(/\/+$/, '')
-    const apiBaseUrl = /^https?:\/\//i.test(normalizedApiBaseUrl) ? normalizedApiBaseUrl : ''
+    const apiBaseUrl = resolveApiBaseUrl(rawApiBaseUrl, fallbackApiBaseUrl)
     const [templateFields, setTemplateFields] = useState<TemplateField[]>([])
     const [templateBuffer, setTemplateBuffer] = useState<ArrayBuffer | null>(null)
     const [templateError, setTemplateError] = useState<string | null>(null)

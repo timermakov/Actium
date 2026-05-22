@@ -1,7 +1,8 @@
 .git
 .gitignore
 .env
-.env.local
+.env.*
+!.env.example
 __pycache__/
 *.pyc
 *.pyo
@@ -14,3 +15,10 @@ venv/
 dist/
 build/
 *.log
+tests/
+coverage.xml
+requirements-dev.txt
+pytest.ini
+sonar-project.properties
+vercel.json
+*.md

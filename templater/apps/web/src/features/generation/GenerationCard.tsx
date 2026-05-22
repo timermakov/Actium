@@ -7,6 +7,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SectionCard } from '../../shared/SectionCard.tsx'
 
@@ -32,8 +33,16 @@ export function GenerationCard({
   onRowChange,
   onGenerateSingle,
   onGenerateBatch,
-}: GenerationCardProps) {
+}: Readonly<GenerationCardProps>) {
   const { t } = useTranslation()
+  const rowMenuItems = useMemo(
+    () =>
+      Array.from({ length: rowsCount }, (_, index) => ({
+        value: index,
+        rowNumber: index + 1,
+      })),
+    [rowsCount],
+  )
 
   return (
     <SectionCard
@@ -88,9 +97,9 @@ export function GenerationCard({
             onChange={(event) => onRowChange(Number(event.target.value))}
           >
             <MenuItem value="">{t('generation.noRows')}</MenuItem>
-            {Array.from({ length: rowsCount }).map((_, index) => (
-              <MenuItem key={index} value={index}>
-                {t('generation.rowLabel', { index: index + 1 })}
+            {rowMenuItems.map((item) => (
+              <MenuItem key={`row-${item.rowNumber}`} value={item.value}>
+                {t('generation.rowLabel', { index: item.rowNumber })}
               </MenuItem>
             ))}
           </Select>

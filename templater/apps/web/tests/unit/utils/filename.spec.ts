@@ -5,6 +5,18 @@ describe('sanitizeFileName', () => {
     it('normalizes string', () => {
         expect(sanitizeFileName('Hello, World!')).toBe('hello_world')
     })
+
+    it('collapses invalid characters to a single underscore', () => {
+        expect(sanitizeFileName('a!!!b')).toBe('a_b')
+    })
+
+    it('trims leading and trailing underscores', () => {
+        expect(sanitizeFileName('__test__')).toBe('test')
+    })
+
+    it('preserves hyphens', () => {
+        expect(sanitizeFileName('File-Name')).toBe('file-name')
+    })
 })
 
 describe('buildFileName', () => {

@@ -1,0 +1,15 @@
+[Unit]
+Description=SonarQube kubectl port-forward (9090 -> sonarqube:9000)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tsermakov
+Environment=KUBECONFIG=/home/tsermakov/.kube/config
+ExecStart=/usr/bin/kubectl port-forward -n sonarqube --address 0.0.0.0 svc/sonarqube 9090:9000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

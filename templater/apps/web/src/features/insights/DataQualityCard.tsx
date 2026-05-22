@@ -16,7 +16,7 @@ export function DataQualityCard({
   emptyCells,
   emptyRows,
   duplicateRows,
-}: DataQualityCardProps) {
+}: Readonly<DataQualityCardProps>) {
   const { t } = useTranslation()
 
   return (
