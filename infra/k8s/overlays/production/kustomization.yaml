@@ -7,10 +7,10 @@ resources:
 images:
 - name: tsermakov/actium-ai-backend
   newName: tsermakov/actium-ai-backend
-  newTag: e3c2eb0c62ef76e5287cf60992c261e52610e741
+  newTag: 2567a43802f9b69032c43ea5e4cb59b94e8b1d2d
 - name: tsermakov/actium-templater-frontend
   newName: tsermakov/actium-templater-frontend
-  newTag: e3c2eb0c62ef76e5287cf60992c261e52610e741
+  newTag: 2567a43802f9b69032c43ea5e4cb59b94e8b1d2d
 - name: tsermakov/actium-user-account-backend
   newName: tsermakov/actium-user-account-backend
-  newTag: e3c2eb0c62ef76e5287cf60992c261e52610e741
+  newTag: 2567a43802f9b69032c43ea5e4cb59b94e8b1d2d
