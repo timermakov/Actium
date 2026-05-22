@@ -191,3 +191,92 @@ jobs:
           tags: |
             ${{ steps.creds.outputs.namespace }}/actium-templater-frontend:${{ github.sha }}
 
+  telegram-notify:
+    name: Telegram Pipeline Status
+    runs-on: ubuntu-latest
+    needs:
+      - user-account-test
+      - user-account-build
+      - web-test
+      - web-build
+      - docker-images-build
+      - docker-images-push
+    if: always()
+    steps:
+      - name: Check Telegram configured
+        id: tg
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Telegram secrets not set, skipping notification"
+          fi
+
+      - name: Build CI notification payload
+        id: payload
+        if: steps.tg.outputs.enabled == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const runUrl = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
+
+            const jobsResp = await github.rest.actions.listJobsForWorkflowRun({
+              owner,
+              repo,
+              run_id: context.runId,
+              per_page: 100,
+            });
+
+            const excluded = new Set(['Telegram Pipeline Status']);
+            const jobs = jobsResp.data.jobs.filter((j) => !excluded.has(j.name));
+            const failedConclusions = new Set(['failure', 'cancelled', 'timed_out', 'action_required', 'startup_failure']);
+            const failedJobs = jobs.filter((j) => failedConclusions.has(j.conclusion ?? ''));
+
+            const icon = failedJobs.length === 0 ? '✅' : '❌';
+            const summaryLines = jobs.map((j) => `- ${j.name}: ${j.conclusion ?? j.status}`).join('\n');
+            const failedLines = failedJobs.length > 0
+              ? failedJobs.map((j) => `- ${j.name}: ${j.html_url}`).join('\n')
+              : 'нет';
+
+            let prUrl = '';
+            if (context.eventName === 'pull_request' && context.payload.pull_request?.html_url) {
+              prUrl = context.payload.pull_request.html_url;
+            } else {
+              const pulls = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner,
+                repo,
+                commit_sha: context.sha,
+              });
+              if (pulls.data.length > 0) {
+                const preferred = pulls.data.find((pr) => pr.state === 'open') ?? pulls.data[0];
+                prUrl = preferred.html_url;
+              }
+            }
+
+            const message = [
+              `${icon} CI ${context.ref.replace('refs/heads/', '')}`,
+              `Event: ${context.eventName}`,
+              `PR: ${prUrl || 'n/a'}`,
+              `Run: ${runUrl}`,
+              '',
+              'Jobs:',
+              summaryLines,
+              '',
+              `Ошибки в pipeline:`,
+              failedLines,
+            ].join('\n');
+
+            core.setOutput('message', message);
+
+      - name: Send Telegram
+        if: steps.tg.outputs.enabled == 'true'
+        uses: appleboy/telegram-action@v1.0.0
+        with:
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          message: ${{ steps.payload.outputs.message }}
