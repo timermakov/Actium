@@ -38,4 +38,4 @@ labels:
   - pairs:
       app.kubernetes.io/part-of: actium
       app.kubernetes.io/managed-by: kustomize
-      includeSelectors: false
+    includeSelectors: false
