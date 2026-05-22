@@ -12,7 +12,7 @@ on:
       skip_registry_push:
         description: "Skip Docker Hub push (tests/build only)"
         required: false
-        default: "false"
+        default: false
         type: boolean
 
 env:
@@ -320,6 +320,120 @@ jobs:
             ${{ steps.creds.outputs.namespace }}/actium-templater-frontend:${{ github.sha }}
             ${{ steps.creds.outputs.namespace }}/actium-templater-frontend:sha-${{ github.sha }}
 
+  telegram-stage-notify:
+    name: Telegram Stage Updates
+    runs-on: ubuntu-latest
+    needs:
+      - user-account-test
+      - user-account-build
+      - web-test
+      - web-build
+      - ai-srv-test
+      - ai-srv-build
+      - docker-images-build
+      - docker-images-push
+      - sonarqube-user-account-srv
+      - sonarqube-web
+      - sonarqube-ai-srv
+      - quality-gate-summary
+    if: always()
+    steps:
+      - name: Check Telegram configured
+        id: tg
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Telegram secrets not set, skipping notification"
+          fi
+
+      - name: Send per-stage updates
+        if: steps.tg.outputs.enabled == 'true'
+        uses: actions/github-script@v7
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const runUrl = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
+            const token = process.env.TELEGRAM_BOT_TOKEN;
+            const chatId = process.env.TELEGRAM_CHAT_ID;
+            const apiUrl = `https://api.telegram.org/bot${token}/sendMessage`;
+
+            const jobsResp = await github.rest.actions.listJobsForWorkflowRun({
+              owner,
+              repo,
+              run_id: context.runId,
+              per_page: 100,
+            });
+
+            const desiredOrder = [
+              'User Account – Test',
+              'User Account – Build',
+              'AI Srv – Test',
+              'AI Srv – Build',
+              'Web – Test',
+              'Web – Build',
+              'SonarQube – user-srv',
+              'SonarQube – ai-srv',
+              'SonarQube – actium-web',
+              'Quality Gate Summary',
+              'Docker Images - Buildx',
+              'Docker Images - Push to Registry',
+            ];
+
+            const byName = new Map(jobsResp.data.jobs.map((j) => [j.name, j]));
+            let prUrl = context.payload.pull_request?.html_url || '';
+            if (!prUrl) {
+              const pulls = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner,
+                repo,
+                commit_sha: context.sha,
+              });
+              if (pulls.data.length > 0) {
+                const preferred = pulls.data.find((pr) => pr.state === 'open') ?? pulls.data[0];
+                prUrl = preferred.html_url;
+              }
+            }
+
+            for (const stage of desiredOrder) {
+              const job = byName.get(stage);
+              if (!job) continue;
+              const result = job.conclusion ?? job.status ?? 'unknown';
+              const icon = result === 'success' ? '✅' : '❌';
+              const msg = [
+                `${icon} Stage: ${stage}`,
+                `Result: ${result}`,
+                `Event: ${context.eventName}`,
+                `PR: ${prUrl || 'n/a'}`,
+                `Run: ${runUrl}`,
+                `Job: ${job.html_url}`,
+              ].join('\n');
+
+              const body = new URLSearchParams({
+                chat_id: chatId,
+                text: msg,
+                disable_web_page_preview: 'true',
+              });
+
+              const res = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body.toString(),
+              });
+
+              if (!res.ok) {
+                core.warning(`Telegram send failed for stage "${stage}" with status ${res.status}`);
+              }
+
+              await new Promise((resolve) => setTimeout(resolve, 250));
+            }
+
   telegram-notify:
     name: Telegram Pipeline Status
     runs-on: ubuntu-latest
@@ -367,8 +481,7 @@ jobs:
               per_page: 100,
             });
 
-            const excluded = new Set(['Telegram Pipeline Status']);
-            const jobs = jobsResp.data.jobs.filter((j) => !excluded.has(j.name));
+            const jobs = jobsResp.data.jobs.filter((j) => !j.name.startsWith('Telegram '));
             const failedConclusions = new Set(['failure', 'cancelled', 'timed_out', 'action_required', 'startup_failure']);
             const failedJobs = jobs.filter((j) => failedConclusions.has(j.conclusion ?? ''));
 
@@ -376,7 +489,7 @@ jobs:
             const summaryLines = jobs.map((j) => `- ${j.name}: ${j.conclusion ?? j.status}`).join('\n');
             const failedLines = failedJobs.length > 0
               ? failedJobs.map((j) => `- ${j.name}: ${j.html_url}`).join('\n')
-              : 'нет';
+              : 'none';
 
             let prUrl = '';
             if (context.eventName === 'pull_request' && context.payload.pull_request?.html_url) {
@@ -402,7 +515,7 @@ jobs:
               'Jobs:',
               summaryLines,
               '',
-              `Ошибки в pipeline:`,
+              `Pipeline errors:`,
               failedLines,
             ].join('\n');
 
@@ -632,4 +745,3 @@ jobs:
             echo "Check SonarQube: ${{ env.SONAR_HOST_URL }}" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
-
