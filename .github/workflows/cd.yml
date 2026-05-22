@@ -38,13 +38,13 @@ jobs:
         run: |
           chmod +x scripts/version.sh scripts/kustomize-set-image-tags.sh
           ./scripts/kustomize-set-image-tags.sh production "${NAMESPACE}"
-          echo "backend_tag=$(scripts/version.sh image-tag user-account)" >> "$GITHUB_OUTPUT"
+          echo "backend_tag=$(scripts/version.sh image-tag user-account-srv)" >> "$GITHUB_OUTPUT"
           echo "frontend_tag=$(scripts/version.sh image-tag frontend)" >> "$GITHUB_OUTPUT"
-          echo "ai_tag=$(scripts/version.sh image-tag ai-backend)" >> "$GITHUB_OUTPUT"
+          echo "ai_tag=$(scripts/version.sh image-tag ai-srv)" >> "$GITHUB_OUTPUT"
           echo "Images in registry (pull by these tags):"
-          echo "  ${NAMESPACE}/actium-user-account-backend:$(scripts/version.sh image-tag user-account)"
+          echo "  ${NAMESPACE}/actium-user-account-srv:$(scripts/version.sh image-tag user-account-srv)"
           echo "  ${NAMESPACE}/actium-templater-frontend:$(scripts/version.sh image-tag frontend)"
-          echo "  ${NAMESPACE}/actium-ai-backend:$(scripts/version.sh image-tag ai-backend)"
+          echo "  ${NAMESPACE}/actium-ai-srv:$(scripts/version.sh image-tag ai-srv)"
 
       - name: Commit and push
         run: |

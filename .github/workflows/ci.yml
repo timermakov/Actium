@@ -20,7 +20,7 @@ env:
   COVERAGE_THRESHOLD: 80
 
 # Pipeline order:
-#   Phase 1 (parallel): user-account test→sonar→build | ai-backend test→sonar→build
+#   Phase 1 (parallel): user-account test→sonar→build | ai-srv test→sonar→build
 #   Phase 2: web test→sonar→build (after both backends built)
 #   Phase 3: docker build → quality gate → registry push → Telegram
 
@@ -53,7 +53,7 @@ jobs:
   user-account-build:
     name: User Account – Build
     runs-on: ubuntu-latest
-    needs: sonarqube-user-account
+    needs: sonarqube-user-account-srv
     defaults:
       run:
         working-directory: user-account
@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - user-account-build
-      - ai-backend-build
+      - ai-srv-build
     defaults:
       run:
         working-directory: templater/apps/web
@@ -106,8 +106,8 @@ jobs:
           path: templater/apps/web/coverage/
           retention-days: 1
 
-  ai-backend-test:
-    name: AI Backend – Test
+  ai-srv-test:
+    name: AI Srv – Test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -135,14 +135,14 @@ jobs:
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ai-backend-coverage
+          name: ai-srv-coverage
           path: templater/apps/api/coverage.xml
           retention-days: 1
 
-  ai-backend-build:
-    name: AI Backend – Build
+  ai-srv-build:
+    name: AI Srv – Build
     runs-on: ubuntu-latest
-    needs: sonarqube-ai-backend
+    needs: sonarqube-ai-srv
     defaults:
       run:
         working-directory: templater/apps/api
@@ -167,7 +167,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image
-        run: docker buildx build --platform linux/amd64 -t actium-ai-backend:ci --load .
+        run: docker buildx build --platform linux/amd64 -t actium-ai-srv:ci --load .
 
   web-build:
     name: Web – Build
@@ -200,7 +200,7 @@ jobs:
     needs:
       - user-account-build
       - web-build
-      - ai-backend-build
+      - ai-srv-build
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -209,7 +209,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build user-account image
-        run: docker buildx build --platform linux/amd64 -t actium-user-account-backend:ci --load ./user-account
+        run: docker buildx build --platform linux/amd64 -t actium-user-account-srv:ci --load ./user-account
 
       - name: Build frontend image
         run: docker buildx build --platform linux/amd64 --build-arg VITE_API_BASE_URL=/api/user -t actium-templater-frontend:ci --load ./templater/apps/web
@@ -266,16 +266,16 @@ jobs:
         id: versions
         run: |
           chmod +x scripts/version.sh
-          echo "backend_tag=$(scripts/version.sh image-tag user-account)" >> "$GITHUB_OUTPUT"
+          echo "backend_tag=$(scripts/version.sh image-tag user-account-srv)" >> "$GITHUB_OUTPUT"
           echo "frontend_tag=$(scripts/version.sh image-tag frontend)" >> "$GITHUB_OUTPUT"
-          echo "ai_tag=$(scripts/version.sh image-tag ai-backend)" >> "$GITHUB_OUTPUT"
-          echo "backend_ver=$(scripts/version.sh show user-account)" >> "$GITHUB_OUTPUT"
+          echo "ai_tag=$(scripts/version.sh image-tag ai-srv)" >> "$GITHUB_OUTPUT"
+          echo "backend_ver=$(scripts/version.sh show user-account-srv)" >> "$GITHUB_OUTPUT"
           echo "frontend_ver=$(scripts/version.sh show frontend)" >> "$GITHUB_OUTPUT"
-          echo "ai_ver=$(scripts/version.sh show ai-backend)" >> "$GITHUB_OUTPUT"
+          echo "ai_ver=$(scripts/version.sh show ai-srv)" >> "$GITHUB_OUTPUT"
           echo "Registry tags:"
-          echo "  backend=${{ steps.creds.outputs.namespace }}/actium-user-account-backend:$(scripts/version.sh image-tag user-account)"
+          echo "  backend=${{ steps.creds.outputs.namespace }}/actium-user-account-srv:$(scripts/version.sh image-tag user-account-srv)"
           echo "  frontend=${{ steps.creds.outputs.namespace }}/actium-templater-frontend:$(scripts/version.sh image-tag frontend)"
-          echo "  ai=${{ steps.creds.outputs.namespace }}/actium-ai-backend:$(scripts/version.sh image-tag ai-backend)"
+          echo "  ai=${{ steps.creds.outputs.namespace }}/actium-ai-srv:$(scripts/version.sh image-tag ai-srv)"
 
       - name: Push user-account image
         if: steps.creds.outputs.available == 'true'
@@ -285,12 +285,12 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: |
-            ${{ steps.creds.outputs.namespace }}/actium-user-account-backend:${{ steps.versions.outputs.backend_tag }}
-            ${{ steps.creds.outputs.namespace }}/actium-user-account-backend:${{ steps.versions.outputs.backend_ver }}
-            ${{ steps.creds.outputs.namespace }}/actium-user-account-backend:${{ github.sha }}
-            ${{ steps.creds.outputs.namespace }}/actium-user-account-backend:sha-${{ github.sha }}
+            ${{ steps.creds.outputs.namespace }}/actium-user-account-srv:${{ steps.versions.outputs.backend_tag }}
+            ${{ steps.creds.outputs.namespace }}/actium-user-account-srv:${{ steps.versions.outputs.backend_ver }}
+            ${{ steps.creds.outputs.namespace }}/actium-user-account-srv:${{ github.sha }}
+            ${{ steps.creds.outputs.namespace }}/actium-user-account-srv:sha-${{ github.sha }}
 
-      - name: Push ai-backend image
+      - name: Push ai-srv image
         if: steps.creds.outputs.available == 'true'
         uses: docker/build-push-action@v6
         with:
@@ -298,10 +298,10 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: |
-            ${{ steps.creds.outputs.namespace }}/actium-ai-backend:${{ steps.versions.outputs.ai_tag }}
-            ${{ steps.creds.outputs.namespace }}/actium-ai-backend:${{ steps.versions.outputs.ai_ver }}
-            ${{ steps.creds.outputs.namespace }}/actium-ai-backend:${{ github.sha }}
-            ${{ steps.creds.outputs.namespace }}/actium-ai-backend:sha-${{ github.sha }}
+            ${{ steps.creds.outputs.namespace }}/actium-ai-srv:${{ steps.versions.outputs.ai_tag }}
+            ${{ steps.creds.outputs.namespace }}/actium-ai-srv:${{ steps.versions.outputs.ai_ver }}
+            ${{ steps.creds.outputs.namespace }}/actium-ai-srv:${{ github.sha }}
+            ${{ steps.creds.outputs.namespace }}/actium-ai-srv:sha-${{ github.sha }}
 
       - name: Push frontend image
         if: steps.creds.outputs.available == 'true'
@@ -326,13 +326,13 @@ jobs:
       - user-account-build
       - web-test
       - web-build
-      - ai-backend-test
-      - ai-backend-build
+      - ai-srv-test
+      - ai-srv-build
       - docker-images-build
       - docker-images-push
-      - sonarqube-user-account
+      - sonarqube-user-account-srv
       - sonarqube-web
-      - sonarqube-ai-backend
+      - sonarqube-ai-srv
       - quality-gate-summary
     if: always()
     steps:
@@ -414,7 +414,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           message: ${{ steps.payload.outputs.message }}
 
-  sonarqube-user-account:
+  sonarqube-user-account-srv:
     name: SonarQube – User Account
     runs-on: ubuntu-latest
     needs: user-account-test
@@ -435,7 +435,7 @@ jobs:
         id: ver
         run: |
           chmod +x scripts/version.sh
-          echo "version=$(scripts/version.sh show user-account)" >> "$GITHUB_OUTPUT"
+          echo "version=$(scripts/version.sh show user-account-srv)" >> "$GITHUB_OUTPUT"
 
       - name: SonarQube Scan (Go)
         if: env.SONAR_TOKEN != ''
@@ -445,7 +445,7 @@ jobs:
         with:
           projectBaseDir: user-account
           args: >
-            -Dsonar.projectKey=actium-user-account
+            -Dsonar.projectKey=actium-user-account-srv
             -Dsonar.projectVersion=${{ steps.ver.outputs.version }}
             -Dsonar.language=go
             -Dsonar.go.coverage.reportPaths=coverage.out
@@ -500,11 +500,11 @@ jobs:
         if: env.SONAR_TOKEN == ''
         run: echo "SONAR_TOKEN_WEB not set — scan skipped"
 
-  sonarqube-ai-backend:
-    name: SonarQube – AI Backend
+  sonarqube-ai-srv:
+    name: SonarQube – AI Srv
     runs-on: ubuntu-latest
-    needs: ai-backend-test
-    if: needs.ai-backend-test.result == 'success'
+    needs: ai-srv-test
+    if: needs.ai-srv-test.result == 'success'
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_AI }}
     steps:
@@ -514,14 +514,14 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: ai-backend-coverage
+          name: ai-srv-coverage
           path: templater/apps/api/
 
       - name: Read version (versions.yaml)
         id: ver
         run: |
           chmod +x scripts/version.sh
-          echo "version=$(scripts/version.sh show ai-backend)" >> "$GITHUB_OUTPUT"
+          echo "version=$(scripts/version.sh show ai-srv)" >> "$GITHUB_OUTPUT"
 
       - name: SonarQube Scan (Python)
         if: env.SONAR_TOKEN != ''
@@ -531,7 +531,7 @@ jobs:
         with:
           projectBaseDir: templater/apps/api
           args: >
-            -Dsonar.projectKey=actium-ai-backend
+            -Dsonar.projectKey=actium-ai-srv
             -Dsonar.projectVersion=${{ steps.ver.outputs.version }}
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.qualitygate.wait=true
@@ -547,20 +547,20 @@ jobs:
     needs:
       - user-account-test
       - web-test
-      - ai-backend-test
-      - sonarqube-user-account
+      - ai-srv-test
+      - sonarqube-user-account-srv
       - sonarqube-web
-      - sonarqube-ai-backend
+      - sonarqube-ai-srv
     if: always()
     steps:
       - name: Summary
         env:
           USER_TEST: ${{ needs.user-account-test.result }}
           WEB_TEST: ${{ needs.web-test.result }}
-          AI_TEST: ${{ needs.ai-backend-test.result }}
-          USER_SONAR: ${{ needs.sonarqube-user-account.result }}
+          AI_TEST: ${{ needs.ai-srv-test.result }}
+          USER_SONAR: ${{ needs.sonarqube-user-account-srv.result }}
           WEB_SONAR: ${{ needs.sonarqube-web.result }}
-          AI_SONAR: ${{ needs.sonarqube-ai-backend.result }}
+          AI_SONAR: ${{ needs.sonarqube-ai-srv.result }}
         run: |
           echo "## Code Quality Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -570,7 +570,7 @@ jobs:
           echo "| Sonar | ${USER_SONAR} | ${WEB_SONAR} | ${AI_SONAR} |" >> $GITHUB_STEP_SUMMARY
 
           FAILED=0
-          for pair in "user-account-test:${USER_TEST}" "web-test:${WEB_TEST}" "ai-backend-test:${AI_TEST}"; do
+          for pair in "user-account-test:${USER_TEST}" "web-test:${WEB_TEST}" "ai-srv-test:${AI_TEST}"; do
             name="${pair%%:*}"
             result="${pair##*:}"
             if [ "${result}" != "success" ]; then
@@ -578,7 +578,7 @@ jobs:
               FAILED=1
             fi
           done
-          for pair in "sonarqube-user-account:${USER_SONAR}" "sonarqube-web:${WEB_SONAR}" "sonarqube-ai-backend:${AI_SONAR}"; do
+          for pair in "sonarqube-user-account-srv:${USER_SONAR}" "sonarqube-web:${WEB_SONAR}" "sonarqube-ai-srv:${AI_SONAR}"; do
             name="${pair%%:*}"
             result="${pair##*:}"
             if [ "${result}" == "failure" ]; then

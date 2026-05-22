@@ -130,7 +130,7 @@ make deploy
 |---------|----------|
 | `make status` | Pod'ы, сервисы, ingress |
 | `make migrate` | Job миграций в кластере |
-| `make logs-back` | Логи user-account-backend |
+| `make logs-back` | Логи user-account-srv |
 | `make restart` | Перезапуск деплойментов |
 | `make clean` | Удаление ресурсов overlay |
 | `make reset-k8s-workloads` | Сброс Deployment при ошибке immutable selector |

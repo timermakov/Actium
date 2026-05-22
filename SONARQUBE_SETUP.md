@@ -11,9 +11,9 @@
 
 | Project key | Описание |
 |-------------|----------|
-| `actium-user-account` | Go backend |
+| `actium-user-account-srv` | Go backend |
 | `actium-web` | TypeScript/React frontend |
-| `actium-ai-backend` | Python/FastAPI AI API |
+| `actium-ai-srv` | Python/FastAPI AI API |
 
 ### 3. GitHub Secrets
 
@@ -53,7 +53,7 @@ git push origin feature/devops-4-2
 
 Или: Actions → CI → **Run workflow**.
 
-После успешного `ai-backend-test` и шага SonarQube проект `actium-ai-backend` появится в UI.
+После успешного `ai-srv-test` и шага SonarQube проект `actium-ai-srv` появится в UI.
 
 ---
 
@@ -103,7 +103,7 @@ docker run --rm --network=host \
   -e SONAR_TOKEN=<token> \
   -v "$(pwd)/user-account:/usr/src" \
   sonarsource/sonar-scanner-cli \
-  -Dsonar.projectKey=actium-user-account \
+  -Dsonar.projectKey=actium-user-account-srv \
   -Dsonar.sources=.
 
 # Web

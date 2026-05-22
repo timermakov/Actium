@@ -9,8 +9,8 @@
 | `TELEGRAM_BOT_TOKEN` | notify.yml, cd.yml | Bot token from @BotFather |
 | `TELEGRAM_CHAT_ID` | notify.yml, cd.yml | Target chat id |
 | `SONAR_HOST_URL` | CI | SonarQube server URL (e.g. `http://178.154.244.207:9090`) |
-| `SONAR_TOKEN_USER_ACCOUNT` | CI | Project token for `actium-user-account` |
+| `SONAR_TOKEN_USER_ACCOUNT` | CI | Project token for `actium-user-account-srv` |
 | `SONAR_TOKEN_WEB` | CI | Project token for `actium-web` |
-| `SONAR_TOKEN_AI` | CI | Project token for `actium-ai-backend` |
+| `SONAR_TOKEN_AI` | CI | Project token for `actium-ai-srv` |
 
 Telegram notifications are skipped until bot token and chat id are configured.

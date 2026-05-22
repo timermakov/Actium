@@ -17,7 +17,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: migrate
-          image: tsermakov/actium-user-account-backend:v1.0.2
+          image: tsermakov/actium-user-account-srv:v1.0.2
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-c"]
           args:

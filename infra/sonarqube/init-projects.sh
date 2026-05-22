@@ -10,9 +10,9 @@ SONAR_PASS="${SONAR_PASS:-admin}"
 
 # Проекты для создания
 PROJECTS=(
-  "actium-user-account:Actium User Account (Go Backend)"
+  "actium-user-account-srv:Actium User Account Srv (Go)"
   "actium-web:Actium Web Frontend (TypeScript/React)"
-  "actium-ai-backend:Actium AI Backend (Python/FastAPI)"
+  "actium-ai-srv:Actium AI Srv (Python/FastAPI)"
 )
 
 echo "Initializing SonarQube projects at $SONAR_URL"

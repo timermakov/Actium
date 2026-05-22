@@ -6,16 +6,16 @@ CONFIG_FILE  = .env.local
 VERSIONS_FILE = versions.yaml
 REGISTRY_NAMESPACE ?= tsermakov
 
-BACKEND_TAG  := $(shell bash scripts/version.sh image-tag user-account 2>/dev/null || echo v1.1.0)
+BACKEND_TAG  := $(shell bash scripts/version.sh image-tag user-account-srv 2>/dev/null || echo v1.1.0)
 FRONTEND_TAG := $(shell bash scripts/version.sh image-tag frontend 2>/dev/null || echo v1.2.0)
-AI_TAG       := $(shell bash scripts/version.sh image-tag ai-backend 2>/dev/null || echo v1.0.0)
+AI_TAG       := $(shell bash scripts/version.sh image-tag ai-srv 2>/dev/null || echo v1.0.0)
 
 K8S_BACKEND_NS    = actium-backend
 K8S_FRONTEND_NS   = actium-frontend
 K8S_MONITORING_NS = actium-monitoring
 
-BACKEND_IMG  = $(REGISTRY_NAMESPACE)/actium-user-account-backend:$(BACKEND_TAG)
-AI_IMG       = $(REGISTRY_NAMESPACE)/actium-ai-backend:$(AI_TAG)
+BACKEND_IMG  = $(REGISTRY_NAMESPACE)/actium-user-account-srv:$(BACKEND_TAG)
+AI_IMG       = $(REGISTRY_NAMESPACE)/actium-ai-srv:$(AI_TAG)
 FRONTEND_IMG = $(REGISTRY_NAMESPACE)/actium-templater-frontend:$(FRONTEND_TAG)
 
 YELLOW = \033[0;33m
@@ -31,19 +31,19 @@ sync-image-tags:
 	@bash scripts/kustomize-set-image-tags.sh minikube $(REGISTRY_NAMESPACE)
 
 bump-patch-backend:
-	@bash scripts/version.sh bump patch user-account
+	@bash scripts/version.sh bump patch user-account-srv
 bump-minor-backend:
-	@bash scripts/version.sh bump minor user-account
+	@bash scripts/version.sh bump minor user-account-srv
 bump-major-backend:
-	@bash scripts/version.sh bump major user-account
+	@bash scripts/version.sh bump major user-account-srv
 bump-patch-frontend:
 	@bash scripts/version.sh bump patch frontend
 bump-minor-frontend:
 	@bash scripts/version.sh bump minor frontend
 bump-patch-ai:
-	@bash scripts/version.sh bump patch ai-backend
+	@bash scripts/version.sh bump patch ai-srv
 bump-minor-ai:
-	@bash scripts/version.sh bump minor ai-backend
+	@bash scripts/version.sh bump minor ai-srv
 
 run:
 	cd $(BACKEND_DIR) && docker compose --env-file .env.local up -d --build

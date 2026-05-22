@@ -4,28 +4,28 @@
 
 | Ключ | Сервис | Docker image |
 |------|--------|----------------|
-| `user-account` | Go API | `actium-user-account-backend` |
+| `user-account-srv` | Go API | `actium-user-account-srv` |
 | `frontend` | React UI | `actium-templater-frontend` |
-| `ai-backend` | FastAPI AI | `actium-ai-backend` |
+| `ai-srv` | FastAPI AI | `actium-ai-srv` |
 
 ## Локально
 
 ```bash
 make version                    # все версии
 make bump-minor-frontend        # frontend 1.2.0 → 1.3.0
-make bump-patch-backend         # user-account patch
+make bump-patch-backend         # user-account-srv patch
 make deploy-local               # sync-image-tags из versions.yaml + deploy
 ```
 
 `scripts/version.sh`:
 
 ```bash
-./scripts/version.sh show user-account
+./scripts/version.sh show user-account-srv
 ./scripts/version.sh image-tag frontend    # v1.2.0
-./scripts/version.sh bump patch ai-backend
+./scripts/version.sh bump patch ai-srv
 ```
 
-На git-теге `backend/v1.2.0` для `user-account` берётся версия из тега (см. `git checkout backend/v1.2.0`).
+На git-теге `backend/v1.2.0` для `user-account-srv` берётся версия из тега (см. `git checkout backend/v1.2.0`).
 
 ## Kustomize
 
@@ -33,11 +33,11 @@ make deploy-local               # sync-image-tags из versions.yaml + deploy
 
 ```yaml
 images:
-  - name: tsermakov/actium-user-account-backend
+  - name: tsermakov/actium-user-account-srv
     newTag: v1.1.0
   - name: tsermakov/actium-templater-frontend
     newTag: v1.2.0
-  - name: tsermakov/actium-ai-backend
+  - name: tsermakov/actium-ai-srv
     newTag: v1.0.0
 ```
 
@@ -61,7 +61,7 @@ images:
 |-----|----------------|
 | `backend/v1.2.0` | только user-account (`versions.yaml` должен содержать `user-account: "1.2.0"`) |
 | `frontend/v1.3.0` | только frontend |
-| `ai/v1.0.5` | только ai-backend |
+| `ai/v1.0.5` | только ai-srv |
 | `release/v1.0.0` | **все три** образа с версиями из `versions.yaml` (номер bundle не обязан совпадать с версиями сервисов) |
 
 Пример — релиз только фронта:

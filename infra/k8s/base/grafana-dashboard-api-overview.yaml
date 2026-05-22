@@ -173,7 +173,7 @@ data:
           {
             "name": "pod",
             "type": "query",
-            "query": "label_values(kube_pod_status_phase{namespace=~\"$namespace\", phase=\"Running\", pod=~\"(user-account-backend|ai-backend).*\"}, pod)",
+            "query": "label_values(kube_pod_status_phase{namespace=~\"$namespace\", phase=\"Running\", pod=~\"(user-account-srv|ai-srv).*\"}, pod)",
             "multi": true,
             "includeAll": false,
             "label": "Pod",

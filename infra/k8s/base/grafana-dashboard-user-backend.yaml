@@ -5,7 +5,7 @@ metadata:
   namespace: actium-monitoring
   labels:
     grafana_dashboard: "1"
-    app: user-account-backend
+    app: user-account-srv
     team: backend
 data:
   user-backend-metrics.json: |-
@@ -274,7 +274,7 @@ data:
           {
             "name": "namespace",
             "type": "query",
-            "query": "label_values(kube_pod_container_resource_requests{pod=~\"user-account-backend.*\"}, namespace)",
+            "query": "label_values(kube_pod_container_resource_requests{pod=~\"user-account-srv.*\"}, namespace)",
             "multi": false,
             "includeAll": false,
             "label": "Namespace",
@@ -285,7 +285,7 @@ data:
           {
             "name": "pod",
             "type": "query",
-            "query": "label_values(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"user-account-backend.*\", phase=\"Running\"}, pod)",
+            "query": "label_values(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"user-account-srv.*\", phase=\"Running\"}, pod)",
             "multi": true,
             "includeAll": false,
             "allValue": ".*",

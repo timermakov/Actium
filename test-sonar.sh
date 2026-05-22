@@ -8,7 +8,7 @@ docker run --rm --network=host \
   -e SONAR_TOKEN=squ_9e5c31b78783b7352c81d33b976123871d68a766 \
   -v "$(pwd)/user-account:/usr/src" \
   sonarsource/sonar-scanner-cli \
-  -Dsonar.projectKey=actium-user-account \
+  -Dsonar.projectKey=actium-user-account-srv \
   -Dsonar.sources=. \
   -Dsonar.go.coverage.reportPaths=coverage.xml
 

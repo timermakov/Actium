@@ -8,7 +8,7 @@
 #   kustomize-set-image-tags.sh <overlay> [namespace] --sha <tag>
 #
 # Single service:
-#   kustomize-set-image-tags.sh <overlay> [namespace] --service user-account --tag v1.2.0
+#   kustomize-set-image-tags.sh <overlay> [namespace] --service user-account-srv --tag v1.2.0
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -66,9 +66,9 @@ set_one() {
   local tag="$2"
   local image=""
   case "${svc}" in
-    user-account) image="actium-user-account-backend" ;;
+    user-account-srv) image="actium-user-account-srv" ;;
     frontend) image="actium-templater-frontend" ;;
-    ai-backend) image="actium-ai-backend" ;;
+    ai-srv) image="actium-ai-srv" ;;
     *) echo "unknown service: ${svc}" >&2; exit 1 ;;
   esac
   kustomize edit set image \
@@ -81,12 +81,12 @@ echo "Updating ${OVERLAY} (${NAMESPACE}):"
 if [ "${MODE}" = "single" ]; then
   set_one "${SERVICE}" "${TAG}"
 elif [ "${MODE}" = "uniform" ]; then
-  set_one user-account "${TAG}"
-  set_one ai-backend "${TAG}"
+  set_one user-account-srv "${TAG}"
+  set_one ai-srv "${TAG}"
   set_one frontend "${TAG}"
 else
-  set_one user-account "$(image_tag user-account)"
-  set_one ai-backend "$(image_tag ai-backend)"
+  set_one user-account-srv "$(image_tag user-account-srv)"
+  set_one ai-srv "$(image_tag ai-srv)"
   set_one frontend "$(image_tag frontend)"
 fi
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Per-service versioning (versions.yaml). Used by Makefile, kustomize, CI release.
 #
-# Services: user-account | frontend | ai-backend
+# Services: user-account-srv | frontend | ai-srv
 #
 # Usage:
 #   version.sh show [service]          # one version or all (YAML)
@@ -11,7 +11,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSIONS_FILE="${ROOT}/versions.yaml"
-VALID_SERVICES="user-account frontend ai-backend"
+VALID_SERVICES="user-account-srv frontend ai-srv"
 
 py() {
   python3 - "$@" <<'PY'
@@ -21,7 +21,7 @@ from pathlib import Path
 
 ROOT = Path(sys.argv[1])
 VERSIONS_FILE = ROOT / "versions.yaml"
-VALID = ("user-account", "frontend", "ai-backend")
+VALID = ("user-account-srv", "frontend", "ai-srv")
 FALLBACK = {s: "1.0.0" for s in VALID}
 
 def load_versions():
@@ -57,7 +57,7 @@ def parse_git_tag():
     if not m:
         return None
     kind, ver = m.group(1), m.group(2)
-    mapping = {"backend": "user-account", "frontend": "frontend", "ai": "ai-backend"}
+    mapping = {"backend": "user-account-srv", "frontend": "frontend", "ai": "ai-srv"}
     return mapping[kind], ver
 
 def bump(ver: str, level: str) -> str:

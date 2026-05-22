@@ -18,10 +18,10 @@ services:
     networks:
       - backend_net
 
-  user-account-backend:
+  user-account-srv:
     build:
       context: ./user-account
-    image: tsermakov/actium-user-account-backend:latest
+    image: tsermakov/actium-user-account-srv:latest
     container_name: actium_user_account_backend
     restart: on-failure
     env_file: .env.local
@@ -34,10 +34,10 @@ services:
       - backend_net
       - frontend_net
 
-  ai-backend:
+  ai-srv:
     build:
       context: ./templater/apps/api
-    image: tsermakov/actium-ai-backend:latest
+    image: tsermakov/actium-ai-srv:latest
     container_name: actium_ai_backend
     env_file: .env.local
     networks:
@@ -57,9 +57,9 @@ services:
     networks:
       - frontend_net
     depends_on:
-      ai-backend:
+      ai-srv:
         condition: service_started
-      user-account-backend:
+      user-account-srv:
         condition: service_started
 
 volumes:

@@ -28,9 +28,9 @@ docker compose -f docker-compose.local.yaml logs -f sonarqube
 После первого входа:
 1. My Account → Security → Generate Tokens
 2. Создайте Project Analysis Token для каждого проекта:
-   - `actium-user-account`
+   - `actium-user-account-srv`
    - `actium-web`
-   - `actium-ai-backend`
+   - `actium-ai-srv`
 
 ### 2. Настройка Quality Gate
 
@@ -47,7 +47,7 @@ docker compose -f docker-compose.local.yaml logs -f sonarqube
 ```bash
 # Запуск сканера (предварительно создайте проект и токен в UI)
 docker compose -f docker-compose.local.yaml --profile scanner run --rm sonar-scanner \
-  -Dsonar.projectKey=actium-user-account \
+  -Dsonar.projectKey=actium-user-account-srv \
   -Dsonar.sources=. \
   -Dsonar.host.url=http://sonarqube:9000 \
   -Dsonar.token=YOUR_TOKEN

@@ -15,13 +15,13 @@ spec:
             pathType: ImplementationSpecific
             backend:
               service:
-                name: user-account-backend
+                name: user-account-srv
                 port:
                   number: 8080
           - path: /api/ai(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
               service:
-                name: ai-backend
+                name: ai-srv
                 port:
                   number: 8001
