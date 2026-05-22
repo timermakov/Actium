@@ -56,7 +56,7 @@ jobs:
             exit 0
           fi
           git commit -m "chore(cd): sync production images to versions.yaml (backend=${{ steps.tags.outputs.backend_tag }} frontend=${{ steps.tags.outputs.frontend_tag }} ai=${{ steps.tags.outputs.ai_tag }})"
-          git push
+          git push origin HEAD:master
 
       - name: Check Telegram configured
         id: tg
