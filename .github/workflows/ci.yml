@@ -439,6 +439,10 @@ jobs:
           chmod +x scripts/version.sh
           echo "version=$(scripts/version.sh show user-account-srv)" >> "$GITHUB_OUTPUT"
 
+      - name: Normalize SONAR_HOST_URL
+        if: env.SONAR_TOKEN != ''
+        run: bash scripts/normalize-sonar-host-url.sh
+
       - name: Wait for SonarQube
         if: env.SONAR_TOKEN != ''
         run: bash scripts/wait-sonarqube.sh
@@ -494,6 +498,10 @@ jobs:
           chmod +x scripts/version.sh
           echo "version=$(scripts/version.sh show frontend)" >> "$GITHUB_OUTPUT"
 
+      - name: Normalize SONAR_HOST_URL
+        if: env.SONAR_TOKEN != ''
+        run: bash scripts/normalize-sonar-host-url.sh
+
       - name: Wait for SonarQube
         if: env.SONAR_TOKEN != ''
         run: bash scripts/wait-sonarqube.sh
@@ -542,6 +550,10 @@ jobs:
         run: |
           chmod +x scripts/version.sh
           echo "version=$(scripts/version.sh show ai-srv)" >> "$GITHUB_OUTPUT"
+
+      - name: Normalize SONAR_HOST_URL
+        if: env.SONAR_TOKEN != ''
+        run: bash scripts/normalize-sonar-host-url.sh
 
       - name: Wait for SonarQube
         if: env.SONAR_TOKEN != ''

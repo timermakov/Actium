@@ -19,7 +19,7 @@
 
 | Secret | Назначение |
 |--------|------------|
-| `SONAR_HOST_URL` | `http://178.154.244.207:9090` |
+| `SONAR_HOST_URL` | `http://178.154.244.207:9090` — **ровно так**: два слэша после `http:`, без `/` в конце, не `http:/178...` |
 | `SONAR_TOKEN_USER_ACCOUNT` | Токен анализа для Go |
 | `SONAR_TOKEN_WEB` | Токен анализа для frontend |
 | `SONAR_TOKEN_AI` | Токен анализа для AI backend |
