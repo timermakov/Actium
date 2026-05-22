@@ -16,8 +16,10 @@ on:
         type: boolean
 
 env:
+  # No trailing slash. Must be reachable from GitHub Actions (open TCP/9090 on VM).
   SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL || 'http://localhost:9000' }}
   COVERAGE_THRESHOLD: 80
+  SONAR_SCANNER_OPTS: -Dsonar.scanner.connectTimeout=120 -Dsonar.scanner.socketTimeout=300
 
 # Pipeline order:
 #   Phase 1 (parallel): user-account test→sonar→build | ai-srv test→sonar→build
@@ -437,11 +439,16 @@ jobs:
           chmod +x scripts/version.sh
           echo "version=$(scripts/version.sh show user-account-srv)" >> "$GITHUB_OUTPUT"
 
+      - name: Wait for SonarQube
+        if: env.SONAR_TOKEN != ''
+        run: bash scripts/wait-sonarqube.sh
+
       - name: SonarQube Scan (Go)
         if: env.SONAR_TOKEN != ''
         uses: sonarsource/sonarqube-scan-action@v6
         env:
           SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
+          SONAR_SCANNER_OPTS: ${{ env.SONAR_SCANNER_OPTS }}
         with:
           projectBaseDir: user-account
           args: >
@@ -461,8 +468,14 @@ jobs:
   sonarqube-web:
     name: SonarQube – actium-web
     runs-on: ubuntu-latest
-    needs: web-test
-    if: needs.web-test.result == 'success'
+    needs:
+      - web-test
+      - sonarqube-user-account-srv
+      - sonarqube-ai-srv
+    if: |
+      needs.web-test.result == 'success' &&
+      (needs.sonarqube-user-account-srv.result == 'success' || needs.sonarqube-user-account-srv.result == 'skipped') &&
+      (needs.sonarqube-ai-srv.result == 'success' || needs.sonarqube-ai-srv.result == 'skipped')
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_WEB }}
     steps:
@@ -481,11 +494,16 @@ jobs:
           chmod +x scripts/version.sh
           echo "version=$(scripts/version.sh show frontend)" >> "$GITHUB_OUTPUT"
 
+      - name: Wait for SonarQube
+        if: env.SONAR_TOKEN != ''
+        run: bash scripts/wait-sonarqube.sh
+
       - name: SonarQube Scan (TypeScript)
         if: env.SONAR_TOKEN != ''
         uses: sonarsource/sonarqube-scan-action@v6
         env:
           SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
+          SONAR_SCANNER_OPTS: ${{ env.SONAR_SCANNER_OPTS }}
         with:
           projectBaseDir: templater/apps/web
           args: >
@@ -525,11 +543,16 @@ jobs:
           chmod +x scripts/version.sh
           echo "version=$(scripts/version.sh show ai-srv)" >> "$GITHUB_OUTPUT"
 
+      - name: Wait for SonarQube
+        if: env.SONAR_TOKEN != ''
+        run: bash scripts/wait-sonarqube.sh
+
       - name: SonarQube Scan (Python)
         if: env.SONAR_TOKEN != ''
         uses: sonarsource/sonarqube-scan-action@v6
         env:
           SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
+          SONAR_SCANNER_OPTS: ${{ env.SONAR_SCANNER_OPTS }}
         with:
           projectBaseDir: templater/apps/api
           args: >
