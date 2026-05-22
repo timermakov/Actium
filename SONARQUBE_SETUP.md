@@ -11,9 +11,9 @@
 
 | Project key | Описание | Видимость |
 |-------------|----------|-----------|
-| `actium-user-account-srv` | Go backend | private |
-| `actium-web` | TypeScript/React frontend | private |
-| `actium-ai-srv` | Python/FastAPI AI API | **public** |
+| `actium-user-account-srv` | **user-srv** (Go) | private |
+| `actium-web` | Actium Web Frontend | private |
+| `actium-ai-srv` | **ai-srv** (Python/FastAPI) | **public** |
 
 ### 3. GitHub Secrets
 

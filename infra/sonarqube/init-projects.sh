@@ -10,9 +10,9 @@ SONAR_PASS="${SONAR_PASS:-admin}"
 
 # Проекты: key:name:visibility (private|public)
 PROJECTS=(
-  "actium-user-account-srv:Actium User Account Srv (Go):private"
+  "actium-user-account-srv:user-srv:private"
   "actium-web:Actium Web Frontend (TypeScript/React):private"
-  "actium-ai-srv:Actium AI Srv (Python/FastAPI):public"
+  "actium-ai-srv:ai-srv:public"
 )
 
 echo "Initializing SonarQube projects at $SONAR_URL"

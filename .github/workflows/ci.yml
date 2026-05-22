@@ -415,7 +415,7 @@ jobs:
           message: ${{ steps.payload.outputs.message }}
 
   sonarqube-user-account-srv:
-    name: SonarQube – User Account
+    name: SonarQube – user-srv
     runs-on: ubuntu-latest
     needs: user-account-test
     if: needs.user-account-test.result == 'success'
@@ -446,6 +446,7 @@ jobs:
           projectBaseDir: user-account
           args: >
             -Dsonar.projectKey=actium-user-account-srv
+            -Dsonar.projectName=user-srv
             -Dsonar.projectVersion=${{ steps.ver.outputs.version }}
             -Dsonar.language=go
             -Dsonar.go.coverage.reportPaths=coverage.out
@@ -501,7 +502,7 @@ jobs:
         run: echo "SONAR_TOKEN_WEB not set — scan skipped"
 
   sonarqube-ai-srv:
-    name: SonarQube – AI Srv
+    name: SonarQube – ai-srv
     runs-on: ubuntu-latest
     needs: ai-srv-test
     if: needs.ai-srv-test.result == 'success'
@@ -532,6 +533,7 @@ jobs:
           projectBaseDir: templater/apps/api
           args: >
             -Dsonar.projectKey=actium-ai-srv
+            -Dsonar.projectName=ai-srv
             -Dsonar.projectVersion=${{ steps.ver.outputs.version }}
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.qualitygate.wait=true
