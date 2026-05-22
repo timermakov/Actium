@@ -81,7 +81,17 @@ jobs:
           echo "backend_tag=${BACKEND_TAG}" >> "$GITHUB_OUTPUT"
           echo "frontend_tag=${FRONTEND_TAG}" >> "$GITHUB_OUTPUT"
           echo "ai_tag=${AI_TAG}" >> "$GITHUB_OUTPUT"
-          NS="${DOCKERHUB_NAMESPACE:-${DOCKERHUB_USERNAME:-tsermakov}}"
+
+          NS_RAW="${DOCKERHUB_NAMESPACE:-${DOCKERHUB_USERNAME:-tsermakov}}"
+          NS="$(printf '%s' "${NS_RAW}" | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s#^/*##;s#/*$##')"
+          if [ -z "${NS}" ]; then
+            NS="tsermakov"
+          fi
+          if ! [[ "${NS}" =~ ^[a-z0-9]+([._-][a-z0-9]+)*$ ]]; then
+            echo "Invalid Docker namespace: '${NS_RAW}' -> '${NS}'"
+            exit 1
+          fi
+
           echo "namespace=${NS}" >> "$GITHUB_OUTPUT"
 
   test:
