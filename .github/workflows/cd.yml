@@ -101,28 +101,42 @@ jobs:
           token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Create and push service tags when versions changed
+        env:
+          TARGET_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
 
-          if ! git rev-parse --verify HEAD^ >/dev/null 2>&1; then
-            echo "No parent commit found, skipping tag creation."
+          if [ -z "${TARGET_SHA}" ]; then
+            echo "Missing workflow_run.head_sha, skipping tag creation."
             exit 0
           fi
 
-          if git diff --quiet HEAD^ HEAD -- versions.yaml; then
-            echo "versions.yaml was not changed in the latest commit."
+          if ! git rev-parse --verify "${TARGET_SHA}" >/dev/null 2>&1; then
+            echo "Target commit not found: ${TARGET_SHA}"
+            exit 1
+          fi
+
+          if ! git rev-parse --verify "${TARGET_SHA}^" >/dev/null 2>&1; then
+            echo "No parent commit for target ${TARGET_SHA}, skipping tag creation."
+            exit 0
+          fi
+
+          if git diff --quiet "${TARGET_SHA}^" "${TARGET_SHA}" -- versions.yaml; then
+            echo "versions.yaml was not changed in target commit ${TARGET_SHA}."
             exit 0
           fi
 
           mapfile -t CANDIDATE_TAGS < <(python3 - <<'PY'
           import re
           import subprocess
+          import os
 
           SERVICE_PREFIX = {
               "user-account-srv": "backend",
               "frontend": "frontend",
               "ai-srv": "ai",
           }
+          target_sha = os.environ["TARGET_SHA"]
 
           def parse_versions(text: str) -> dict[str, str]:
               result = {}
@@ -135,8 +149,8 @@ jobs:
                       result[match.group(1)] = match.group(2)
               return result
 
-          current = subprocess.check_output(["git", "show", "HEAD:versions.yaml"], text=True)
-          previous = subprocess.check_output(["git", "show", "HEAD^:versions.yaml"], text=True)
+          current = subprocess.check_output(["git", "show", f"{target_sha}:versions.yaml"], text=True)
+          previous = subprocess.check_output(["git", "show", f"{target_sha}^:versions.yaml"], text=True)
 
           current_versions = parse_versions(current)
           previous_versions = parse_versions(previous)
@@ -164,7 +178,7 @@ jobs:
             if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null 2>&1; then
               echo "Tag already exists locally, skipping create: ${TAG}"
             else
-              git tag "${TAG}"
+              git tag "${TAG}" "${TARGET_SHA}"
               echo "Created tag: ${TAG}"
             fi
             TAGS_TO_PUSH+=("${TAG}")
