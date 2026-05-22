@@ -81,3 +81,99 @@ jobs:
             CD ok — production kustomize synced to versions.yaml
             backend=${{ steps.tags.outputs.backend_tag }} frontend=${{ steps.tags.outputs.frontend_tag }} ai=${{ steps.tags.outputs.ai_tag }}
             Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+  create-release-tags:
+    name: Create release tags from versions.yaml
+    runs-on: ubuntu-latest
+    needs: bump-manifests
+    if: >
+      needs.bump-manifests.result == 'success' &&
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'master'
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Create and push service tags when versions changed
+        run: |
+          set -euo pipefail
+
+          if ! git rev-parse --verify HEAD^ >/dev/null 2>&1; then
+            echo "No parent commit found, skipping tag creation."
+            exit 0
+          fi
+
+          if git diff --quiet HEAD^ HEAD -- versions.yaml; then
+            echo "versions.yaml was not changed in the latest commit."
+            exit 0
+          fi
+
+          mapfile -t CANDIDATE_TAGS < <(python3 - <<'PY'
+          import re
+          import subprocess
+
+          SERVICE_PREFIX = {
+              "user-account-srv": "backend",
+              "frontend": "frontend",
+              "ai-srv": "ai",
+          }
+
+          def parse_versions(text: str) -> dict[str, str]:
+              result = {}
+              pattern = re.compile(
+                  r'^\s*(user-account-srv|frontend|ai-srv)\s*:\s*["\']?([0-9]+\.[0-9]+\.[0-9]+)["\']?\s*$'
+              )
+              for line in text.splitlines():
+                  match = pattern.match(line)
+                  if match:
+                      result[match.group(1)] = match.group(2)
+              return result
+
+          current = subprocess.check_output(["git", "show", "HEAD:versions.yaml"], text=True)
+          previous = subprocess.check_output(["git", "show", "HEAD^:versions.yaml"], text=True)
+
+          current_versions = parse_versions(current)
+          previous_versions = parse_versions(previous)
+
+          for service, prefix in SERVICE_PREFIX.items():
+              current_version = current_versions.get(service)
+              previous_version = previous_versions.get(service)
+              if current_version and current_version != previous_version:
+                  print(f"{prefix}/v{current_version}")
+          PY
+          )
+
+          if [ "${#CANDIDATE_TAGS[@]}" -eq 0 ]; then
+            echo "No service version changed in versions.yaml."
+            exit 0
+          fi
+
+          TAGS_TO_PUSH=()
+          for TAG in "${CANDIDATE_TAGS[@]}"; do
+            if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+              echo "Tag already exists in remote, skipping: ${TAG}"
+              continue
+            fi
+
+            if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null 2>&1; then
+              echo "Tag already exists locally, skipping create: ${TAG}"
+            else
+              git tag "${TAG}"
+              echo "Created tag: ${TAG}"
+            fi
+            TAGS_TO_PUSH+=("${TAG}")
+          done
+
+          if [ "${#TAGS_TO_PUSH[@]}" -eq 0 ]; then
+            echo "No new tags to push."
+            exit 0
+          fi
+
+          git push origin "${TAGS_TO_PUSH[@]}"
+          echo "Pushed tags: ${TAGS_TO_PUSH[*]}"
