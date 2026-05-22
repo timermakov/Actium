@@ -7,10 +7,10 @@ resources:
 images:
 - name: tsermakov/actium-ai-srv
   newName: tsermakov/actium-ai-srv
-  newTag: v1.2.0
+  newTag: v1.2.1
 - name: tsermakov/actium-templater-frontend
   newName: tsermakov/actium-templater-frontend
-  newTag: v1.2.0
+  newTag: v1.2.1
 - name: tsermakov/actium-user-account-srv
   newName: tsermakov/actium-user-account-srv
-  newTag: v1.2.0
+  newTag: v1.2.1
