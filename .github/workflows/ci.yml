@@ -405,7 +405,11 @@ jobs:
               const job = byName.get(stage);
               if (!job) continue;
               const result = job.conclusion ?? job.status ?? 'unknown';
-              const icon = result === 'success' ? '✅' : '❌';
+              let icon = '⚪';
+              if (result === 'success') icon = '✅';
+              else if (result === 'skipped' || result === 'neutral') icon = '⏭️';
+              else if (result === 'cancelled') icon = '🚫';
+              else if (result === 'failure' || result === 'timed_out' || result === 'action_required' || result === 'startup_failure') icon = '❌';
               const msg = [
                 `${icon} Stage: ${stage}`,
                 `Result: ${result}`,
