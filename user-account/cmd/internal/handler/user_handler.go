@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"user-account/cmd/internal/model"
 
 	"github.com/google/uuid"
@@ -46,7 +47,7 @@ func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
 			ID:        u.ID,
 			Email:     u.Email,
 			Nickname:  u.Nickname,
-			Role:      u.Role,
+			Role:      strings.ToUpper(u.Role),
 			CreatedAt: u.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 	}

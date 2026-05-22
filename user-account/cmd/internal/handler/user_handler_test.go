@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"user-account/cmd/internal/gen/mocks"
 	"user-account/cmd/internal/model"
@@ -164,7 +165,7 @@ func TestUserHandler_List(t *testing.T) {
 				assert.Equal(t, tt.mockUsers[0].ID, resp[0].ID)
 				assert.Equal(t, tt.mockUsers[0].Email, resp[0].Email)
 				assert.Equal(t, tt.mockUsers[0].Nickname, resp[0].Nickname)
-				assert.Equal(t, tt.mockUsers[0].Role, resp[0].Role)
+				assert.Equal(t, strings.ToUpper(tt.mockUsers[0].Role), resp[0].Role)
 				assert.NotEmpty(t, resp[0].CreatedAt)
 			}
 		})
