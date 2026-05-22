@@ -14,7 +14,11 @@ import {
 import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SectionCard } from '../../shared/SectionCard.tsx'
-import type { DataTable } from '../../types/data.ts'
+import type { DataRow, DataTable } from '../../types/data.ts'
+
+function previewRowKey(row: DataRow, columns: string[]): string {
+  return columns.map((column) => `${column}=${row[column] ?? ''}`).join('|')
+}
 
 type DataUploadCardProps = {
   table: DataTable | null
@@ -28,7 +32,7 @@ export function DataUploadCard({
   preview,
   error,
   onFileSelected,
-}: DataUploadCardProps) {
+}: Readonly<DataUploadCardProps>) {
   const { t } = useTranslation()
   const inputRef = useRef<HTMLInputElement | null>(null)
 
@@ -79,7 +83,7 @@ export function DataUploadCard({
                   </TableHead>
                   <TableBody>
                     {preview.rows.map((row, rowIndex) => (
-                      <TableRow key={rowIndex}>
+                      <TableRow key={previewRowKey(row, preview.columns)}>
                         <TableCell>{rowIndex + 1}</TableCell>
                         {preview.columns.map((column) => (
                           <TableCell key={column}>{row[column]}</TableCell>

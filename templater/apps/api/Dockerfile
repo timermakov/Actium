@@ -27,7 +27,7 @@ RUN groupadd --system appgroup \
     && useradd --system --gid appgroup --home /app appuser
 
 COPY --from=builder /opt/venv /opt/venv
-COPY . .
+COPY main.py ./main.py
 
 RUN chown -R appuser:appgroup /app
 

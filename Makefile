@@ -3,21 +3,47 @@ FRONTEND_DIR = templater
 K8S_OVERLAY  = infra/k8s/overlays/minikube
 K8S_MIGRATE  = infra/k8s/base/migration-job.yaml
 CONFIG_FILE  = .env.local
-IMAGE_TAG    = v1.0.2
+VERSIONS_FILE = versions.yaml
 REGISTRY_NAMESPACE ?= tsermakov
+
+BACKEND_TAG  := $(shell bash scripts/version.sh image-tag user-account 2>/dev/null || echo v1.1.0)
+FRONTEND_TAG := $(shell bash scripts/version.sh image-tag frontend 2>/dev/null || echo v1.2.0)
+AI_TAG       := $(shell bash scripts/version.sh image-tag ai-backend 2>/dev/null || echo v1.0.0)
 
 K8S_BACKEND_NS    = actium-backend
 K8S_FRONTEND_NS   = actium-frontend
 K8S_MONITORING_NS = actium-monitoring
 
-BACKEND_IMG  = $(REGISTRY_NAMESPACE)/actium-user-account-backend:$(IMAGE_TAG)
-AI_IMG       = $(REGISTRY_NAMESPACE)/actium-ai-backend:$(IMAGE_TAG)
-FRONTEND_IMG = $(REGISTRY_NAMESPACE)/actium-templater-frontend:$(IMAGE_TAG)
+BACKEND_IMG  = $(REGISTRY_NAMESPACE)/actium-user-account-backend:$(BACKEND_TAG)
+AI_IMG       = $(REGISTRY_NAMESPACE)/actium-ai-backend:$(AI_TAG)
+FRONTEND_IMG = $(REGISTRY_NAMESPACE)/actium-templater-frontend:$(FRONTEND_TAG)
 
 YELLOW = \033[0;33m
 NC     = \033[0m
 
-.PHONY: run stop clean build-all push-cloud push-local start-cluster db-host-up deploy deploy-local migrate status restart logs-back reset-db reset-k8s-workloads reset-k8s-postgres reset-k8s-postgres-data
+.PHONY: run stop clean build-all push-cloud push-local start-cluster db-host-up deploy deploy-local migrate status restart logs-back reset-db reset-k8s-workloads reset-k8s-postgres reset-k8s-postgres-data version sync-image-tags
+.PHONY: bump-patch-backend bump-minor-backend bump-major-backend bump-patch-frontend bump-minor-frontend bump-patch-ai bump-minor-ai
+
+version:
+	@bash scripts/version.sh show
+
+sync-image-tags:
+	@bash scripts/kustomize-set-image-tags.sh minikube $(REGISTRY_NAMESPACE)
+
+bump-patch-backend:
+	@bash scripts/version.sh bump patch user-account
+bump-minor-backend:
+	@bash scripts/version.sh bump minor user-account
+bump-major-backend:
+	@bash scripts/version.sh bump major user-account
+bump-patch-frontend:
+	@bash scripts/version.sh bump patch frontend
+bump-minor-frontend:
+	@bash scripts/version.sh bump minor frontend
+bump-patch-ai:
+	@bash scripts/version.sh bump patch ai-backend
+bump-minor-ai:
+	@bash scripts/version.sh bump minor ai-backend
 
 run:
 	cd $(BACKEND_DIR) && docker compose --env-file .env.local up -d --build
@@ -83,8 +109,8 @@ reset-k8s-workloads:
 	-kubectl -n $(K8S_MONITORING_NS) delete deployment prometheus grafana kube-state-metrics --ignore-not-found
 	-kubectl -n $(K8S_MONITORING_NS) delete daemonset node-exporter --ignore-not-found
 
-deploy:
-	@echo "$(YELLOW)--- Deploying to K8s (kustomize) ---$(NC)"
+deploy: sync-image-tags
+	@echo "$(YELLOW)--- Deploying to K8s (kustomize) backend=$(BACKEND_TAG) frontend=$(FRONTEND_TAG) ai=$(AI_TAG) ---$(NC)"
 	kubectl apply -k $(K8S_OVERLAY)
 	kubectl create configmap backend-config -n $(K8S_BACKEND_NS) --from-env-file=$(CONFIG_FILE) --dry-run=client -o yaml | kubectl apply -f -
 	kubectl create secret generic backend-secrets -n $(K8S_BACKEND_NS) --from-env-file=$(CONFIG_FILE) --dry-run=client -o yaml | kubectl apply -f -

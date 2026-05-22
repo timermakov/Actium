@@ -4,6 +4,7 @@ metadata:
   name: actium-grafana-ingress
   namespace: actium-monitoring
 spec:
+  ingressClassName: nginx
   rules:
     - http:
         paths:

@@ -7,7 +7,10 @@ type MappingHealthCardProps = {
   unmappedFields: string[]
 }
 
-export function MappingHealthCard({ mappedPercent, unmappedFields }: MappingHealthCardProps) {
+export function MappingHealthCard({
+  mappedPercent,
+  unmappedFields,
+}: Readonly<MappingHealthCardProps>) {
   const { t } = useTranslation()
 
   return (

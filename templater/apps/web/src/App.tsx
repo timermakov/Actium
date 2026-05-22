@@ -29,18 +29,14 @@ function App() {
         returnObjects: true,
     }) as { title: string; text: string }[];
 
-    const howIcons = [
-        <FileUploadIcon fontSize="large" />,
-        <TableViewIcon fontSize="large" />,
-        <AutoFixHighIcon fontSize="large" />,
-    ];
+    const howIcons = [FileUploadIcon, TableViewIcon, AutoFixHighIcon] as const;
 
     const featureIcons = [
-        <HelpOutlineIcon fontSize="large" />,
-        <NoteAddIcon fontSize="large" />,
-        <CodeIcon fontSize="large" />,
-        <FileDownloadIcon fontSize="large" />,
-    ];
+        HelpOutlineIcon,
+        NoteAddIcon,
+        CodeIcon,
+        FileDownloadIcon,
+    ] as const;
 
     return (
         <AppShell>
@@ -83,7 +79,9 @@ function App() {
                 </Stack>
 
                 <Box sx={{ display: "flex", gap: 1, maxWidth: 1200, width: "100%" }}>
-                    {howItWorks.map((item, i) => (
+                    {howItWorks.map((item, i) => {
+                        const HowIcon = howIcons[i];
+                        return (
                         <Card
                             key={item.title}
                             elevation={0}
@@ -98,7 +96,9 @@ function App() {
                             }}
                         >
                             <CardContent>
-                                <Box sx={{ mb: 2 }}>{howIcons[i]}</Box>
+                                <Box sx={{ mb: 2 }}>
+                                    <HowIcon fontSize="large" />
+                                </Box>
                                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
                                     {item.title}
                                 </Typography>
@@ -107,7 +107,8 @@ function App() {
                                 </Typography>
                             </CardContent>
                         </Card>
-                    ))}
+                        );
+                    })}
                 </Box>
 
                 <Typography variant="h3" sx={{ fontWeight: 600 }}>
@@ -115,7 +116,9 @@ function App() {
                 </Typography>
 
                 <Box sx={{ display: "flex", gap: 1, maxWidth: 1400, width: "100%" }}>
-                    {features.map((item, i) => (
+                    {features.map((item, i) => {
+                        const FeatureIcon = featureIcons[i];
+                        return (
                         <Card
                             key={item.title}
                             elevation={0}
@@ -130,7 +133,9 @@ function App() {
                             }}
                         >
                             <CardContent>
-                                <Box sx={{ mb: 2 }}>{featureIcons[i]}</Box>
+                                <Box sx={{ mb: 2 }}>
+                                    <FeatureIcon fontSize="large" />
+                                </Box>
                                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
                                     {item.title}
                                 </Typography>
@@ -139,7 +144,8 @@ function App() {
                                 </Typography>
                             </CardContent>
                         </Card>
-                    ))}
+                        );
+                    })}
                 </Box>
             </Stack>
         </AppShell>

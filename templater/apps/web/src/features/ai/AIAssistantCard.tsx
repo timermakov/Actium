@@ -13,15 +13,15 @@ import { useTranslation } from 'react-i18next'
 import { SectionCard } from '../../shared/SectionCard.tsx'
 
 type AIAssistantCardProps = {
-  canSummarize: boolean
-  canAdvise: boolean
-  isLoading: boolean
-  error: string | null
-  result: string | null
-  language: 'ru' | 'en'
-  onLanguageChange: (language: 'ru' | 'en') => void
-  onSummarize: () => void
-  onAdvise: () => void
+  readonly canSummarize: boolean
+  readonly canAdvise: boolean
+  readonly isLoading: boolean
+  readonly error: string | null
+  readonly result: string | null
+  readonly language: 'ru' | 'en'
+  readonly onLanguageChange: (language: 'ru' | 'en') => void
+  readonly onSummarize: () => void
+  readonly onAdvise: () => void
 }
 
 export function AIAssistantCard({
@@ -34,16 +34,16 @@ export function AIAssistantCard({
   onLanguageChange,
   onSummarize,
   onAdvise,
-}: AIAssistantCardProps) {
+}: Readonly<AIAssistantCardProps>) {
   const { t } = useTranslation()
   const sanitizeLine = (line: string) =>
     line
       .replace(/^#{1,6}\s*/, '')
       .replace(/^>\s*/, '')
-      .replace(/^[-•\u2022]\s*/, '')
+      .replace(/^[-\u2022]\s*/, '')
       .replace(/^\d+\.\s*/, '')
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/`([^`]+)`/g, '$1')
+      .replaceAll('**', '')
+      .replaceAll('`', '')
       .replace(/^\*\s*/, '')
       .trim()
 
@@ -53,7 +53,61 @@ export function AIAssistantCard({
     .filter(Boolean)
 
   const bulletItems = lines.filter((line) => line.length > 0)
-    .filter(Boolean)
+
+  const renderResultSection = () => {
+    if (isLoading) {
+      return (
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 2,
+            backgroundColor: 'background.default',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
+          <CircularProgress size={20} />
+          <Typography variant="body2" color="text.secondary">
+            {t('ai.loading')}
+          </Typography>
+        </Paper>
+      )
+    }
+
+    if (result) {
+      return (
+        <Paper variant="outlined" sx={{ p: 2, backgroundColor: 'background.default' }}>
+          <Stack spacing={1}>
+            {bulletItems.length > 1 ? (
+              <Stack spacing={1}>
+                {bulletItems.map((item) => (
+                  <Stack key={item} direction="row" spacing={1}>
+                    <Typography variant="body2" color="text.secondary">
+                      •
+                    </Typography>
+                    <Typography variant="body2">{item}</Typography>
+                  </Stack>
+                ))}
+              </Stack>
+            ) : (
+              lines.map((line) => (
+                <Typography key={line} variant="body2">
+                  {line}
+                </Typography>
+              ))
+            )}
+          </Stack>
+        </Paper>
+      )
+    }
+
+    return (
+      <Typography variant="body2" color="text.secondary">
+        {t('ai.noResult')}
+      </Typography>
+    )
+  }
 
   return (
     <SectionCard
@@ -88,50 +142,7 @@ export function AIAssistantCard({
       }
     >
       {error ? <Alert severity="error">{error}</Alert> : null}
-      {isLoading ? (
-        <Paper
-          variant="outlined"
-          sx={{
-            p: 2,
-            backgroundColor: 'background.default',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-          }}
-        >
-          <CircularProgress size={20} />
-          <Typography variant="body2" color="text.secondary">
-            {t('ai.loading')}
-          </Typography>
-        </Paper>
-      ) : result ? (
-        <Paper variant="outlined" sx={{ p: 2, backgroundColor: 'background.default' }}>
-          <Stack spacing={1}>
-            {bulletItems.length > 1 ? (
-              <Stack spacing={1}>
-                {bulletItems.map((item, index) => (
-                  <Stack key={`${item}-${index}`} direction="row" spacing={1}>
-                    <Typography variant="body2" color="text.secondary">
-                      •
-                    </Typography>
-                    <Typography variant="body2">{item}</Typography>
-                  </Stack>
-                ))}
-              </Stack>
-            ) : (
-              lines.map((line, index) => (
-                <Typography key={`${line}-${index}`} variant="body2">
-                  {line}
-                </Typography>
-              ))
-            )}
-          </Stack>
-        </Paper>
-      ) : (
-        <Typography variant="body2" color="text.secondary">
-          {t('ai.noResult')}
-        </Typography>
-      )}
+      {renderResultSection()}
     </SectionCard>
   )
 }

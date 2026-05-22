@@ -24,9 +24,18 @@ resources:
   - ingress-backend.yaml
   - ingress-grafana.yaml
   - ingress-frontend.yaml
+  # SonarQube resources
+  - sonarqube-namespace.yaml
+  - sonarqube-secrets.yaml
+  - sonarqube-postgres-pvc.yaml
+  - sonarqube-postgres.yaml
+  - sonarqube-app-pvc.yaml
+  - sonarqube-config.yaml
+  - sonarqube-app.yaml
+  - sonarqube-ingress.yaml
 
 labels:
   - pairs:
       app.kubernetes.io/part-of: actium
       app.kubernetes.io/managed-by: kustomize
-    includeSelectors: false
+      includeSelectors: false

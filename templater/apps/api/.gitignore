@@ -1,2 +1,9 @@
 .vercel
 .env*.local
+__pycache__/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.venv/
+venv/

@@ -4,6 +4,7 @@ metadata:
   name: actium-frontend-ingress
   namespace: actium-frontend
 spec:
+  ingressClassName: nginx
   rules:
     - http:
         paths:
